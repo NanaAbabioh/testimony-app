@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for AH Testimony Library
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read access to all clips
+    match /clips/{allPaths=**} {
+      allow read: if true;
+
+      // Only allow authenticated admin users to write/upload clips
+      allow write: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email == "admin@alphahour.com";
+    }
+
+    // Deny access to all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
