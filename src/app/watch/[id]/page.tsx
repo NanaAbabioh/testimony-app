@@ -122,8 +122,8 @@ export default function WatchPage() {
   const startSec = Number.isFinite(startOverride) ? Math.max(0, Math.floor(startOverride)) : clip.startSec;
 
   return (
-    <main 
-      className="min-h-screen py-6 px-4 sm:px-6 lg:px-8"
+    <main
+      className="min-h-screen py-3 sm:py-6 px-2 sm:px-4 lg:px-8"
       style={{
         backgroundImage: `url('/Ayaaaa-bg.svg')`,
         backgroundSize: 'cover',
@@ -132,70 +132,72 @@ export default function WatchPage() {
         backgroundColor: '#f9fafb'
       }}
     >
-      <div className="max-w-5xl mx-auto space-y-6">
-      {/* Title + summary with banner background */}
-      <div className="bg-gradient-to-r from-purple-800 to-purple-900 rounded-lg p-6 shadow-lg">
-        {clip.serviceDate ? <div className="text-xs text-purple-100 mb-2">{clip.serviceDate}</div> : null}
-        <h1 className="font-serif text-2xl sm:text-3xl leading-tight text-white font-bold mb-2">{clip.titleShort}</h1>
-        {clip.summaryShort ? <p className="text-[15px] sm:text-base text-purple-50 leading-relaxed">{clip.summaryShort}</p> : null}
-      </div>
+      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+        {/* Title + summary with banner background */}
+        <div className="bg-gradient-to-r from-purple-800 to-purple-900 rounded-lg p-4 sm:p-6 shadow-lg">
+          {clip.serviceDate ? <div className="text-xs text-purple-100 mb-2">{clip.serviceDate}</div> : null}
+          <h1 className="font-serif text-xl sm:text-2xl lg:text-3xl leading-tight text-white font-bold mb-2">{clip.titleShort}</h1>
+          {clip.summaryShort ? <p className="text-sm sm:text-base text-purple-50 leading-relaxed">{clip.summaryShort}</p> : null}
+        </div>
 
-      {/* Player */}
-      <CleanPlayer
-        title={clip.titleShort}
-        videoId={clip.videoId}
-        startSec={startSec}
-        endSec={clip.endSec}
-        processedClipUrl={clip.processedClipUrl}
-      />
+        {/* Player - Full width on mobile */}
+        <div className="w-full">
+          <CleanPlayer
+            title={clip.titleShort}
+            videoId={clip.videoId}
+            startSec={startSec}
+            endSec={clip.endSec}
+            processedClipUrl={clip.processedClipUrl}
+          />
+        </div>
 
-      {/* Interaction Buttons - Clean like YouTube */}
-      <div className="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200">
-        <VideoInteractionButtons 
-          clip={{
-            id: clip.id,
-            videoId: clip.videoId,
-            startSec: clip.startSec,
-            endSec: clip.endSec,
-            titleShort: clip.titleShort,
-            summaryShort: clip.summaryShort,
-            title: clip.title,
-            fullText: clip.fullText,
-            episode: clip.episode,
-            serviceDate: clip.serviceDate,
-            thumbUrl: clip.thumbUrl
-          }}
-        />
-      </div>
+        {/* Interaction Buttons - Mobile optimized */}
+        <div className="bg-white rounded-lg p-3 sm:px-4 sm:py-3 shadow-sm border border-gray-200">
+          <VideoInteractionButtons
+            clip={{
+              id: clip.id,
+              videoId: clip.videoId,
+              startSec: clip.startSec,
+              endSec: clip.endSec,
+              titleShort: clip.titleShort,
+              summaryShort: clip.summaryShort,
+              title: clip.title,
+              fullText: clip.fullText,
+              episode: clip.episode,
+              serviceDate: clip.serviceDate,
+              thumbUrl: clip.thumbUrl
+            }}
+          />
+        </div>
 
-      {/* Actions (no transcript) */}
-      <div className="flex items-center gap-3">
-        <Button 
-          onClick={() => window.history.back()} 
-          variant="outline" 
-          size="sm"
-          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-        >
-          Back
-        </Button>
-        <Button 
-          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })} 
-          size="sm"
-          className="bg-purple-600 text-white hover:bg-purple-700"
-        >
-          See related
-        </Button>
-      </div>
+        {/* Actions - Mobile friendly buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button
+            onClick={() => window.history.back()}
+            variant="outline"
+            size="sm"
+            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 touch-manipulation"
+          >
+            ← Back
+          </Button>
+          <Button
+            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
+            size="sm"
+            className="bg-purple-600 text-white hover:bg-purple-700 touch-manipulation"
+          >
+            See related ↓
+          </Button>
+        </div>
 
-      {/* Related */}
-      {related.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-serif text-xl text-gray-900 font-bold">More like this</h2>
-          <div className="space-y-3">
-            {related.map((r) => <ClipRow key={r.id} clip={r} />)}
-          </div>
-        </section>
-      )}
+        {/* Related - Mobile optimized */}
+        {related.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="font-serif text-lg sm:text-xl text-gray-900 font-bold px-1">More like this</h2>
+            <div className="space-y-2 sm:space-y-3">
+              {related.map((r) => <ClipRow key={r.id} clip={r} />)}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

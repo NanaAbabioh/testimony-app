@@ -5,9 +5,10 @@ import Link from "next/link";
 import ClipRow from "@/components/ClipRow";
 import SaveButton from "./SaveButton";
 
-type Params = { 
-  categoryId?: string; 
-  month?: string; 
+type Params = {
+  categoryId?: string;
+  month?: string;
+  episode?: string;
   sort: "recent" | "mostSaved";
 };
 
@@ -59,17 +60,20 @@ export default function ClipInfinite({ params }: { params: Params }) {
   // Build API URL with parameters
   const buildApiUrl = useCallback((useCursor: boolean = false): string => {
     const base = new URL("/api/clips", window.location.origin);
-    
+
     if (params.categoryId) {
       base.searchParams.set("categoryId", params.categoryId);
     }
     if (params.month && params.sort !== "mostSaved") {
       base.searchParams.set("month", params.month);
     }
-    
+    if (params.episode) {
+      base.searchParams.set("episode", params.episode);
+    }
+
     base.searchParams.set("sort", params.sort);
     base.searchParams.set("limit", "20");
-    
+
     if (useCursor && cursor) {
       base.searchParams.set("cursor", cursor);
     }
@@ -319,7 +323,7 @@ export default function ClipInfinite({ params }: { params: Params }) {
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No testimonies found</h3>
         <p className="text-gray-600">
-          {params.categoryId || params.month 
+          {params.categoryId || params.month || params.episode
             ? 'Try adjusting your filters to see more results.'
             : 'Check back later for new testimonies.'
           }

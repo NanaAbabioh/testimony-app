@@ -21,9 +21,10 @@ type Props = {
   endSec?: number;
   title: string;
   processedClipUrl?: string; // NEW: URL to the extracted clip
+  hideControls?: boolean; // NEW: Hide YouTube/Full Video buttons
 };
 
-export default function CleanPlayer({ videoId, startSec, endSec, processedClipUrl }: Props) {
+export default function CleanPlayer({ videoId, startSec, endSec, processedClipUrl, hideControls = false }: Props) {
   const [showFullVideo, setShowFullVideo] = useState(false);
   const [player, setPlayer] = useState<any>(null);
   const [isAPIReady, setIsAPIReady] = useState(false);
@@ -162,11 +163,10 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
 
   return (
     <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-black">
-
-      {/* Video Player - removed header completely */}
+      {/* Video Player - Mobile optimized */}
       <div className="aspect-video bg-black relative">
         {useExtractedClip ? (
-          /* HTML5 Video Player for Extracted Clips */
+          /* HTML5 Video Player for Extracted Clips - Mobile Enhanced */
           <video
             ref={videoRef}
             src={processedClipUrl}
@@ -175,6 +175,12 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
             loop
             playsInline
             className="w-full h-full object-contain"
+            style={{
+              // Enhanced mobile video experience
+              touchAction: 'manipulation',
+              WebkitTouchAction: 'manipulation'
+            }}
+            controlsList="nodownload"
             onError={(e) => {
               console.error('Error loading extracted clip:', e);
               // Fallback to YouTube if extracted clip fails
@@ -184,21 +190,26 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
             Your browser does not support the video tag.
           </video>
         ) : (
-          /* YouTube Player Container for Full Video */
-          <div ref={playerRef} className="w-full h-full" />
+          /* YouTube Player Container for Full Video - Mobile Enhanced */
+          <div
+            ref={playerRef}
+            className="w-full h-full"
+            style={{
+              // Better touch handling for YouTube player
+              touchAction: 'manipulation'
+            }}
+          />
         )}
-        
+
         {/* Loading indicator */}
         {!isAPIReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-white"></div>
           </div>
         )}
-        
-        {/* Removed clip duration overlay */}
+
       </div>
-      
-      {/* Removed info bar */}
+
     </div>
   );
 }

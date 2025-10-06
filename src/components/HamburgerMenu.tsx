@@ -20,7 +20,9 @@ export default function HamburgerMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { startMagicLinkFlow } = useAuthContext();
+  const authContext = useAuthContext();
+  console.log('Auth context in HamburgerMenu:', authContext);
+  const { sendSignInLink } = authContext || {};
 
   // Default categories to ensure key ones are always present
   const defaultCategories: Category[] = [
@@ -83,17 +85,37 @@ export default function HamburgerMenu() {
 
   const handleSaveSync = async () => {
     const email = prompt("Enter your email address to save and sync across devices:");
-    
+
     if (email && email.trim()) {
       try {
-        await startMagicLinkFlow(email.trim());
-        alert("Check your email for a magic link to complete the sync setup!");
+        if (!sendSignInLink) {
+          console.error('sendSignInLink function not available');
+          alert("System Unavailable\n\nThe account setup service is currently unavailable. Please refresh the page and try again.");
+          return;
+        }
+
+        // Store email for post-authentication sync
+        localStorage.setItem('pendingSync', 'true');
+        localStorage.setItem('syncEmail', email.trim());
+
+        const result = await sendSignInLink(email.trim());
+        if (result.success) {
+          alert("Account Setup - Email Sent\n\n" + result.message + "\n\nIMPORTANT: Please check your spam/junk folder if you don't see the email within a few minutes.\n\nAfter clicking the link in your email, your saved testimonies will be automatically synced to the cloud and available across all your devices.");
+        } else {
+          alert("Setup Failed\n\n" + (result.message || "Unable to send verification email. Please check your email address and try again."));
+          // Clean up pending sync if failed
+          localStorage.removeItem('pendingSync');
+          localStorage.removeItem('syncEmail');
+        }
       } catch (error) {
         console.error('Error starting magic link flow:', error);
-        alert("There was an error. Please try again.");
+        alert("Connection Error\n\nUnable to connect to the authentication service. Please check your internet connection and try again.");
+        // Clean up pending sync if failed
+        localStorage.removeItem('pendingSync');
+        localStorage.removeItem('syncEmail');
       }
     }
-    
+
     setIsOpen(false);
   };
 
@@ -124,18 +146,18 @@ export default function HamburgerMenu() {
 
       {/* Menu Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800 rounded-lg shadow-xl border border-slate-700 overflow-hidden">
           <nav className="py-2">
             {/* Home */}
             <Link
               href="/"
-              className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+              className="block px-4 py-2 hover:bg-slate-700 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                <span className="text-gray-800 font-medium">Home</span>
+                <span className="text-white font-medium text-sm">Home</span>
               </div>
             </Link>
 
@@ -143,16 +165,16 @@ export default function HamburgerMenu() {
             <div>
               <button
                 onClick={() => setCategoriesExpanded(!categoriesExpanded)}
-                className="w-full px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
+                className="w-full px-4 py-2 hover:bg-slate-700 transition-colors flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
-                  <span className="text-gray-800 font-medium">Explore Testimonies</span>
+                  <span className="text-white font-medium text-sm">Explore Testimonies</span>
                 </div>
                 <svg
-                  className={`w-4 h-4 text-gray-500 transition-transform ${
+                  className={`w-3 h-3 text-slate-400 transition-transform ${
                     categoriesExpanded ? 'rotate-180' : ''
                   }`}
                   fill="none"
@@ -165,46 +187,59 @@ export default function HamburgerMenu() {
 
               {/* Categories Submenu */}
               {categoriesExpanded && (
-                <div className="bg-gray-50 border-t border-gray-100">
+                <div className="bg-slate-700 border-t border-slate-600">
                   {categories.map((category) => (
                     <Link
                       key={category.id}
                       href={`/category/${category.id}`}
-                      className="block px-8 py-2.5 hover:bg-gray-100 transition-colors"
+                      className="block px-6 py-1.5 hover:bg-slate-600 transition-colors"
                     >
-                      <span className="text-gray-700 text-sm">{category.name}</span>
+                      <span className="text-slate-200 text-xs">{category.name}</span>
                     </Link>
                   ))}
                 </div>
               )}
             </div>
 
+            {/* Altar Call */}
+            <Link
+              href="/altar-call"
+              className="block px-4 py-2 hover:bg-slate-700 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-white font-medium text-sm">Altar Call</span>
+              </div>
+            </Link>
+
             {/* My Testimony Wall */}
             <Link
               href="/my-testimony-wall"
-              className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+              className="block px-4 py-2 hover:bg-slate-700 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                <span className="text-gray-800 font-medium">My Testimony Wall</span>
+                <span className="text-white font-medium text-sm">My Testimony Wall</span>
               </div>
             </Link>
 
             {/* Divider */}
-            <div className="h-px bg-gray-200 my-2"></div>
+            <div className="h-px bg-slate-600 my-1"></div>
 
             {/* Save & Sync */}
             <button
               onClick={handleSaveSync}
-              className="w-full px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+              className="w-full px-4 py-2 hover:bg-slate-700 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span className="text-gray-800 font-medium">Save & Sync Across Devices</span>
+                <span className="text-white font-medium text-sm">Save & Sync Across Devices</span>
               </div>
             </button>
           </nav>

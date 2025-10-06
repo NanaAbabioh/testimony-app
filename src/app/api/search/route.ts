@@ -5,11 +5,18 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
+    const category = searchParams.get('category');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    const sort = searchParams.get('sort') || 'relevance';
+    const limit = parseInt(searchParams.get('limit') || '18', 10);
+    const cursor = searchParams.get('cursor');
 
-    if (!query || query.trim().length === 0) {
+    // Allow search without query if filters are provided
+    if ((!query || query.trim().length === 0) && !category && !from && !to) {
       return NextResponse.json({
         success: false,
-        error: 'Search query is required'
+        error: 'Search query or filters are required'
       }, { status: 400 });
     }
 
@@ -18,7 +25,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Database not available' }, { status: 503 });
     }
 
-    console.log(`🔍 Searching for: "${query}"`);
+    console.log(`🔍 Searching for: "${query}" with filters - category: ${category}, from: ${from}, to: ${to}, sort: ${sort}`);
 
     // Get all clips from the database
     const clipsSnapshot = await adminDb.collection('clips').get();
@@ -67,6 +74,24 @@ export async function GET(request: Request) {
 
     // Search through all clips with intelligent semantic matching
     for (const { id, data: clipData } of allClipData) {
+      // Apply filters first
+
+      // Category filter
+      if (category && clipData.category !== category) {
+        continue;
+      }
+
+      // Date range filter
+      if ((from || to) && clipData.serviceDate) {
+        const serviceDate = clipData.serviceDate;
+        if (from && serviceDate < from) {
+          continue;
+        }
+        if (to && serviceDate > to) {
+          continue;
+        }
+      }
+
       const searchableText = [
         clipData.title || '',
         clipData.titleShort || '',
@@ -76,32 +101,38 @@ export async function GET(request: Request) {
         clipData.summaryShort || ''
       ].join(' ').toLowerCase();
 
-      // Exact match scoring (highest weight)
+      // If no query provided but filters matched, include with default score
       let exactScore = 0;
       let semanticScore = 0;
       let fuzzyScore = 0;
 
-      // Check original search terms first (highest priority)
-      for (const term of searchTerms) {
-        if (searchableText.includes(term)) {
-          exactScore += term.length * 3; // Higher weight for exact matches
-        }
-        
-        // Fuzzy matching for partial words
-        const words = searchableText.split(/\s+/);
-        for (const word of words) {
-          if (word.includes(term) || term.includes(word)) {
-            fuzzyScore += Math.min(term.length, word.length) * 1.5;
+      if (!query || query.trim().length === 0) {
+        exactScore = 1; // Default score for filter-only results
+      } else {
+        // Check original search terms first (highest priority)
+        for (const term of searchTerms) {
+          if (searchableText.includes(term)) {
+            exactScore += term.length * 3; // Higher weight for exact matches
+          }
+
+          // Fuzzy matching for partial words
+          const words = searchableText.split(/\s+/);
+          for (const word of words) {
+            if (word.includes(term) || term.includes(word)) {
+              fuzzyScore += Math.min(term.length, word.length) * 1.5;
+            }
           }
         }
       }
 
-      // Check semantic matches (medium priority)
-      for (const term of searchTerms) {
-        if (semanticKeywords[term]) {
-          for (const semantic of semanticKeywords[term]) {
-            if (searchableText.includes(semantic)) {
-              semanticScore += semantic.length * 2; // Medium weight for semantic matches
+      // Check semantic matches (medium priority) - only if query exists
+      if (query && query.trim().length > 0) {
+        for (const term of searchTerms) {
+          if (semanticKeywords[term]) {
+            for (const semantic of semanticKeywords[term]) {
+              if (searchableText.includes(semantic)) {
+                semanticScore += semantic.length * 2; // Medium weight for semantic matches
+              }
             }
           }
         }
@@ -151,27 +182,43 @@ export async function GET(request: Request) {
       }
     }
 
-    // Sort by relevance score first, then by episode number (latest episodes first)
+    // Sort based on the sort parameter
     matchingTestimonies.sort((a, b) => {
-      // Primary sort: relevance score (highest first)
-      if (a._score !== b._score) {
-        return b._score - a._score;
+      if (sort === 'newest') {
+        // Sort by service date (newest first)
+        const aDate = a.serviceDate || '';
+        const bDate = b.serviceDate || '';
+        if (aDate !== bDate) {
+          return bDate.localeCompare(aDate); // Newest first
+        }
+      } else if (sort === 'most-saved') {
+        // Sort by saved count (highest first)
+        const aSaved = a.savedCount || 0;
+        const bSaved = b.savedCount || 0;
+        if (aSaved !== bSaved) {
+          return bSaved - aSaved; // Most saved first
+        }
+      } else {
+        // Default 'relevance' sorting - by score first
+        if (a._score !== b._score) {
+          return b._score - a._score;
+        }
       }
-      
+
       // Secondary sort: episode number (extract numeric part for proper sorting)
       const getEpisodeNumber = (ep: string) => {
         if (!ep) return 0;
         const match = ep.match(/\d+/);
         return match ? parseInt(match[0], 10) : 0;
       };
-      
+
       const aEpisode = getEpisodeNumber(a.sourceVideo?.episode || a.episode || '');
       const bEpisode = getEpisodeNumber(b.sourceVideo?.episode || b.episode || '');
-      
+
       if (aEpisode !== bEpisode) {
         return bEpisode - aEpisode; // Latest episode first
       }
-      
+
       // Tertiary sort: alphabetical by title
       return a.title.localeCompare(b.title);
     });
@@ -211,14 +258,36 @@ export async function GET(request: Request) {
       console.log(`💡 Generated ${suggestions.length} suggestions: ${suggestions.join(', ')}`);
     }
 
+    // Apply pagination
+    const totalResults = matchingTestimonies.length;
+    let startIndex = 0;
+    let nextCursor = null;
+
+    if (cursor) {
+      // Find the cursor position
+      const cursorIndex = matchingTestimonies.findIndex(item => item.id === cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const endIndex = Math.min(startIndex + limit, totalResults);
+    const paginatedTestimonies = matchingTestimonies.slice(startIndex, endIndex);
+
+    // Set next cursor if there are more results
+    if (endIndex < totalResults) {
+      nextCursor = paginatedTestimonies[paginatedTestimonies.length - 1]?.id;
+    }
+
     // Remove score from response
-    const cleanedTestimonies = matchingTestimonies.map(({ _score, ...testimony }) => testimony);
+    const cleanedTestimonies = paginatedTestimonies.map(({ _score, ...testimony }) => testimony);
 
     return NextResponse.json({
       success: true,
       testimonies: cleanedTestimonies,
-      totalResults: cleanedTestimonies.length,
-      query: query,
+      totalResults: totalResults,
+      query: query || undefined,
+      nextCursor: nextCursor,
       suggestions: suggestions.length > 0 ? suggestions : undefined
     });
 

@@ -128,15 +128,16 @@ export default function TestimonyVideoPlayer({
   const progressPercentage = ((currentTime - startTime) / (endTime - startTime)) * 100;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-3 sm:p-6">
+          {/* Header - Mobile optimized */}
+          <div className="flex justify-between items-start mb-3 sm:mb-4">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 pr-2 line-clamp-2">{title}</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
+              className="text-gray-400 hover:text-gray-600 text-xl sm:text-2xl p-1 touch-manipulation flex-shrink-0"
+              aria-label="Close video player"
             >
               ×
             </button>
@@ -155,10 +156,10 @@ export default function TestimonyVideoPlayer({
             </div>
           </div>
 
-          {/* Custom Clip Controls */}
-          <div className="bg-gray-800 text-white rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm font-medium">
+          {/* Custom Clip Controls - Mobile optimized */}
+          <div className="bg-gray-800 text-white rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+              <div className="text-xs sm:text-sm font-medium">
                 📹 Testimony Clip • {formatTime(endTime - startTime)} duration
               </div>
               <div className="flex gap-2">
@@ -172,21 +173,21 @@ export default function TestimonyVideoPlayer({
                       }
                     }
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 sm:py-1 rounded text-xs sm:text-sm touch-manipulation"
                 >
                   {isPlaying ? '⏸️ Pause' : '▶️ Play'}
                 </button>
                 <button
                   onClick={handleRestart}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 sm:py-1 rounded text-xs sm:text-sm touch-manipulation"
                 >
                   🔄 Restart
                 </button>
               </div>
             </div>
             
-            {/* Custom Timeline (only shows clip duration) */}
-            <div className="w-full bg-gray-600 rounded-full h-3 mb-2 cursor-pointer" 
+            {/* Custom Timeline (only shows clip duration) - Mobile enhanced */}
+            <div className="w-full bg-gray-600 rounded-full h-4 sm:h-3 mb-2 cursor-pointer touch-manipulation"
                  onClick={(e) => {
                    if (player) {
                      const rect = e.currentTarget.getBoundingClientRect();
@@ -195,14 +196,14 @@ export default function TestimonyVideoPlayer({
                      player.seekTo(targetTime);
                    }
                  }}>
-              <div 
-                className="bg-blue-500 h-3 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+              <div
+                className="bg-blue-500 h-4 sm:h-3 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
                 style={{ width: `${Math.min(Math.max(progressPercentage, 0), 100)}%` }}
               >
-                <div className="w-3 h-3 bg-white rounded-full shadow-lg"></div>
+                <div className="w-4 h-4 sm:w-3 sm:h-3 bg-white rounded-full shadow-lg"></div>
               </div>
             </div>
-            
+
             <div className="flex justify-between text-xs text-gray-300">
               <span>0:00</span>
               <span className="font-medium">{formatTime(currentTime - startTime)}</span>
@@ -210,11 +211,11 @@ export default function TestimonyVideoPlayer({
             </div>
           </div>
 
-          {/* Auto-Stop Notice */}
+          {/* Auto-Stop Notice - Mobile optimized */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <div className="text-sm text-green-800">
-              <strong>✅ Smart Testimony Playback:</strong> This video will automatically pause when the testimony ends at {formatTime(endTime)}. 
-              Use the "Restart Testimony" button to replay just this segment.
+            <div className="text-xs sm:text-sm text-green-800">
+              <strong>✅ Smart Testimony Playback:</strong> This video will automatically pause when the testimony ends at {formatTime(endTime)}.
+              Use the "Restart" button to replay just this segment.
             </div>
           </div>
         </div>

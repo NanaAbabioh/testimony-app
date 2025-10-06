@@ -124,29 +124,29 @@ export default function CategoryGrid() {
   }
 
   return (
-    <section id="categories-section" ref={sectionRef} className="relative pt-3 pb-24 overflow-hidden" style={{
+    <section id="categories-section" ref={sectionRef} className="relative pt-3 pb-16 sm:pb-20 md:pb-24 overflow-hidden" style={{
         backgroundImage: `url('/hallelujah-bg.svg')`,
         backgroundColor: '#ffffff'
       }}>
-      <div className="relative container mx-auto px-6">
+      <div className="relative container mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#1a1a2e] via-[#0f3460] to-[#16213e] bg-clip-text text-transparent drop-shadow-lg mb-6 leading-tight py-2">
+        <div className="text-center mb-12 sm:mb-14 md:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[#1a1a2e] via-[#0f3460] to-[#16213e] bg-clip-text text-transparent drop-shadow-lg mb-4 sm:mb-6 leading-tight py-2">
             What testimony are you believing God for?
           </h2>
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-12">
+          <div className="max-w-2xl mx-auto mb-8 sm:mb-10 md:mb-12">
             <form onSubmit={handleSearch} className="relative">
               <div className="relative rounded-full p-0.5" style={{
                 background: 'linear-gradient(135deg, #1a1a2e, #c0c0c0, #0f3460, #e5e5e5)'
               }}>
-                <input 
+                <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Your keywords here....."
-                  className="w-full px-6 py-4 pr-24 text-lg rounded-full bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white transition-all border-0"
+                  className="w-full px-4 sm:px-6 py-3 sm:py-4 pr-20 sm:pr-24 text-base sm:text-lg rounded-full bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white transition-all border-0"
                 />
               </div>
               
@@ -154,20 +154,20 @@ export default function CategoryGrid() {
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-12 sm:right-16 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors touch-manipulation"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               )}
               
-              <button 
+              <button
                 type="submit"
                 disabled={!searchQuery.trim()}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed rounded-full p-2 transition-colors"
+                className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed rounded-full p-1.5 sm:p-2 transition-colors touch-manipulation"
               >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
@@ -177,7 +177,7 @@ export default function CategoryGrid() {
         </div>
 
         {/* Category Cards Grid */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto ${isVisible ? 'animate-categories' : ''}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto ${isVisible ? 'animate-categories' : ''}`}>
           {categories.map((category, index) => {
             // Map category IDs to background images
             const getBackgroundImage = (categoryId: string) => {
@@ -196,7 +196,7 @@ export default function CategoryGrid() {
             return (
               <div
                 key={category.id}
-                className={`category-card group relative rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden h-32 flex flex-col justify-between ${isVisible ? 'in-view' : ''}`}
+                className={`category-card group relative rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden h-28 sm:h-32 flex flex-col justify-between touch-manipulation ${isVisible ? 'in-view' : ''}`}
                 onClick={() => handleCategoryClick(category.id)}
                 style={{
                   backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('${getBackgroundImage(category.id)}')`,
@@ -207,7 +207,7 @@ export default function CategoryGrid() {
               >
                 {/* Category Content */}
                 <div className="flex-1 flex items-center justify-center">
-                  <h3 className="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors drop-shadow-lg text-center">
+                  <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-yellow-300 transition-colors drop-shadow-lg text-center leading-tight">
                     {category.name}
                   </h3>
                 </div>

@@ -10,16 +10,17 @@ interface SaveButtonProps {
   onSaveChange?: (saved: boolean) => void;
 }
 
-export default function SaveButton({ 
-  clipId, 
+export default function SaveButton({
+  clipId,
   className = '',
   showText = true,
-  onSaveChange 
+  onSaveChange
 }: SaveButtonProps) {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showUnsaveConfirm, setShowUnsaveConfirm] = useState(false);
 
   // Check initial saved state
   useEffect(() => {
@@ -55,58 +56,78 @@ export default function SaveButton({
   };
 
   const toggle = async () => {
+    console.log('[SaveButton] Toggle clicked, saved:', saved);
+
+    // If currently saved, show confirmation before unsaving
+    if (saved) {
+      console.log('[SaveButton] Showing unsave confirmation dialog');
+      setShowUnsaveConfirm(true);
+      return;
+    }
+
+    // If not saved, proceed with saving immediately
+    await performToggle();
+  };
+
+  const performToggle = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Ensure user is authenticated
       const user = await ensureGuest();
       const idToken = await user.getIdToken();
-      
+
       // Optimistically update UI
       const newSavedState = !saved;
       setSaved(newSavedState);
-      
+
       // Make API call
       const path = saved ? `/api/clips/${clipId}/unsave` : `/api/clips/${clipId}/save`;
-      const response = await fetch(path, { 
+      const response = await fetch(path, {
         method: 'POST',
-        headers: { 
+        headers: {
           Authorization: `Bearer ${idToken}`,
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         // Revert optimistic update on error
         setSaved(!newSavedState);
-        
+
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update save state');
       }
-      
+
       const data = await response.json();
-      
+
       // Handle edge cases from API response
       if (data.alreadySaved) {
         setSaved(true);
       } else if (data.wasNotSaved) {
         setSaved(false);
       }
-      
+
       // Notify parent component if callback provided
       onSaveChange?.(newSavedState);
-      
+
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save';
       console.error('[SaveButton] Error toggling save:', message);
       setError(message);
-      
+
       // Show error briefly then clear
       setTimeout(() => setError(null), 3000);
     } finally {
       setLoading(false);
     }
+  };
+
+  const confirmUnsave = () => {
+    console.log('[SaveButton] Confirmed unsave');
+    setShowUnsaveConfirm(false);
+    performToggle();
   };
 
   // Determine button styles
@@ -171,6 +192,43 @@ export default function SaveButton({
         <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-in slide-in-from-bottom-2">
           <p className="text-sm">{error}</p>
         </div>
+      )}
+
+      {/* Unsave Confirmation Dialog */}
+      {showUnsaveConfirm && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setShowUnsaveConfirm(false)}
+          />
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-50 w-[90%] max-w-sm p-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove from Saved?</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                This will remove this testimony from your personal collection under My Testimony Wall.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowUnsaveConfirm(false)}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Never Mind
+                </button>
+                <button
+                  onClick={confirmUnsave}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  OK, Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

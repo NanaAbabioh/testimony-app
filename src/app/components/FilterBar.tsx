@@ -13,173 +13,162 @@ interface Category {
 interface FilterBarProps {
   onFilterChange: (filters: {
     categoryId?: string;
-    month?: string;
-    year?: string;
     episode?: string;
-    sort: "recent" | "mostSaved";
   }) => void;
   className?: string;
   currentCategoryId?: string;
   currentCategoryName?: string;
-  disableInitialCallback?: boolean; // Disable initial onFilterChange call
+  disableInitialCallback?: boolean;
 }
-
-// Predefined categories - these should match your database
-const DEFAULT_CATEGORIES: Category[] = [
-  { id: "healing", name: "Healing" },
-  { id: "financial", name: "Financial Breakthrough" },
-  { id: "family", name: "Family & Childbirth" },
-  { id: "career", name: "Career/Business" },
-  { id: "academic", name: "Academic Breakthrough" },
-  { id: "deliverance", name: "Addiction & Deliverance" },
-  { id: "multiple", name: "Multiple Testimonies" },
-  { id: "others", name: "Others" },
-];
 
 export default function FilterBar({ onFilterChange, className = "", currentCategoryId, currentCategoryName, disableInitialCallback = false }: FilterBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // State for filters
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedEpisode, setSelectedEpisode] = useState<string>("");
-  const [selectedSort, setSelectedSort] = useState<"recent" | "mostSaved">("recent");
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [availableEpisodes, setAvailableEpisodes] = useState<string[]>([]);
-  
+  const [loadingEpisodes, setLoadingEpisodes] = useState<boolean>(true);
+
   // Mobile filter panel state
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+
   // Prevent infinite loops with initialization flag
   const isInitialized = useRef(false);
 
-  // Show this filter bar if a category is selected (either from URL params or props)
+  // Show this filter bar if a category is selected
   const shouldShowFilterBar = selectedCategory || currentCategoryId;
 
   // Initialize filters from URL params or props
   useEffect(() => {
     const categoryId = currentCategoryId || searchParams.get("categoryId") || "";
-    const month = searchParams.get("month") || "";
-    const year = searchParams.get("year") || "";
     const episode = searchParams.get("episode") || "";
-    const sort = (searchParams.get("sort") as "recent" | "mostSaved") || "recent";
 
     setSelectedCategory(categoryId);
-    setSelectedMonth(month);
-    setSelectedYear(year);
     setSelectedEpisode(episode);
-    setSelectedSort(sort);
 
     // Only trigger initial filter change once, and only if not disabled
     if (!isInitialized.current && !disableInitialCallback) {
       isInitialized.current = true;
       onFilterChange({
         categoryId: categoryId || undefined,
-        month: month || undefined,
-        year: year || undefined,
         episode: episode || undefined,
-        sort,
       });
     } else if (!isInitialized.current) {
-      isInitialized.current = true; // Still mark as initialized even if callback is disabled
+      isInitialized.current = true;
     }
-  }, [searchParams, currentCategoryId]); // Remove onFilterChange from dependencies
+  }, [searchParams, currentCategoryId]);
 
-  // Load categories from API
+  // Load available episodes when category changes and clear episode selection
   useEffect(() => {
-    loadCategories();
-    loadAvailableEpisodes();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      const response = await fetch("/api/categories");
-      if (response.ok) {
-        const data = await response.json();
-        if (data.categories && Array.isArray(data.categories)) {
-          setCategories(data.categories);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-      // Keep using default categories
+    // Clear episode selection when category changes (unless it's the initial load)
+    if (isInitialized.current) {
+      setSelectedEpisode("");
+      // Update filters to clear episode when category changes
+      onFilterChange({
+        categoryId: selectedCategory || currentCategoryId || undefined,
+        episode: undefined,
+      });
     }
-  };
+    loadAvailableEpisodes();
+  }, [selectedCategory, currentCategoryId]);
 
   const loadAvailableEpisodes = async () => {
     try {
-      // Fetch clips to get available episodes
-      const response = await fetch("/api/clips?limit=50&sort=recent");
+      console.log('Loading available episodes...');
+      setLoadingEpisodes(true);
+
+      // Get the active category ID
+      const activeCategoryId = currentCategoryId || selectedCategory;
+
+      // Build API URL with category filter if available
+      let apiUrl = "/api/clips?limit=50";
+      if (activeCategoryId) {
+        apiUrl += `&categoryId=${encodeURIComponent(activeCategoryId)}`;
+        console.log(`Loading episodes for category: ${activeCategoryId}`);
+      } else {
+        console.log('Loading episodes for all categories');
+      }
+
+      const response = await fetch(apiUrl);
+      console.log('Episodes fetch response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Episodes API response structure:', {
+          hasItems: !!data.items,
+          itemsLength: data.items?.length,
+          meta: data.meta,
+          sampleKeys: data.items?.[0] ? Object.keys(data.items[0]) : []
+        });
+
         if (data.items && Array.isArray(data.items)) {
-          const episodes = [...new Set(data.items
-            .map((item: any) => item.episode)
-            .filter((episode: string) => episode)
-            .map((episode: string) => episode.match(/\d+/)?.[0])
-            .filter((episode: string) => episode)
-          )].sort((a, b) => {
-            // Ensure proper numeric sorting (latest episode first)
-            const numA = parseInt(a, 10);
-            const numB = parseInt(b, 10);
-            return numB - numA; // Descending order
+          console.log('Sample clips data:', data.items.slice(0, 3).map(item => ({
+            id: item.id,
+            episode: item.episode,
+            title: item.titleShort || item.title
+          })));
+
+          // Extract unique episodes and sort them properly
+          const episodeSet = new Set<string>();
+          data.items.forEach((item: any) => {
+            if (item.episode && typeof item.episode === 'string' && item.episode.trim() !== "") {
+              episodeSet.add(item.episode.trim());
+            }
           });
+
+          // Convert to array and sort properly
+          const episodes = Array.from(episodeSet).sort((a: string, b: string) => {
+            // Extract episode numbers for proper numeric sorting
+            const aMatch = a.match(/(\d+)/);
+            const bMatch = b.match(/(\d+)/);
+
+            if (aMatch && bMatch) {
+              const aNum = parseInt(aMatch[1], 10);
+              const bNum = parseInt(bMatch[1], 10);
+              return bNum - aNum; // Latest episodes first (descending order)
+            }
+
+            // Fallback to string comparison if no numbers found
+            return b.localeCompare(a);
+          });
+
+          if (activeCategoryId) {
+            console.log(`✅ Loaded ${episodes.length} unique episodes for category ${activeCategoryId}:`, episodes);
+          } else {
+            console.log(`✅ Loaded ${episodes.length} unique episodes:`, episodes);
+          }
           setAvailableEpisodes(episodes);
+        } else {
+          console.log('❌ No items array in response:', data);
+          setAvailableEpisodes([]);
         }
+      } else {
+        console.error('❌ Episodes fetch failed:', response.status, response.statusText);
+        setAvailableEpisodes([]);
       }
     } catch (error) {
-      console.error("Failed to load available episodes:", error);
+      console.error("❌ Error loading episodes:", error);
+      setAvailableEpisodes([]);
+    } finally {
+      setLoadingEpisodes(false);
     }
-  };
-
-  // Handle filter changes
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    updateFilters({ categoryId, month: selectedMonth, year: selectedYear, episode: selectedEpisode, sort: selectedSort });
-  };
-
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    updateFilters({ categoryId: selectedCategory, month, year: selectedYear, episode: selectedEpisode, sort: selectedSort });
-  };
-
-  const handleYearChange = (year: string) => {
-    setSelectedYear(year);
-    updateFilters({ categoryId: selectedCategory, month: selectedMonth, year, episode: selectedEpisode, sort: selectedSort });
   };
 
   const handleEpisodeChange = (episode: string) => {
     setSelectedEpisode(episode);
-    updateFilters({ categoryId: selectedCategory, month: selectedMonth, year: selectedYear, episode, sort: selectedSort });
+    updateFilters({ categoryId: selectedCategory, episode });
   };
 
-  const handleSortChange = (sort: "recent" | "mostSaved") => {
-    setSelectedSort(sort);
-    updateFilters({ categoryId: selectedCategory, month: selectedMonth, year: selectedYear, episode: selectedEpisode, sort });
-  };
-
-  const updateFilters = (filters: { categoryId: string; month: string; year: string; episode: string; sort: "recent" | "mostSaved" }) => {
-    // Update URL
-    const params = new URLSearchParams(searchParams.toString());
+  const updateFilters = (filters: { categoryId: string; episode: string }) => {
+    // Update URL search params
+    const params = new URLSearchParams(searchParams);
 
     if (filters.categoryId) {
       params.set("categoryId", filters.categoryId);
     } else {
       params.delete("categoryId");
-    }
-
-    if (filters.month) {
-      params.set("month", filters.month);
-    } else {
-      params.delete("month");
-    }
-
-    if (filters.year) {
-      params.set("year", filters.year);
-    } else {
-      params.delete("year");
     }
 
     if (filters.episode) {
@@ -188,322 +177,107 @@ export default function FilterBar({ onFilterChange, className = "", currentCateg
       params.delete("episode");
     }
 
-    if (filters.sort !== "recent") {
-      params.set("sort", filters.sort);
-    } else {
-      params.delete("sort");
-    }
+    // Update URL without refresh
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
 
-    router.replace(`?${params.toString()}`, { scroll: false });
-
-    // Notify parent component
+    // Call the parent callback
     onFilterChange({
       categoryId: filters.categoryId || undefined,
-      month: filters.month || undefined,
-      year: filters.year || undefined,
       episode: filters.episode || undefined,
-      sort: filters.sort,
     });
   };
 
-  const clearFilters = () => {
-    setSelectedCategory("");
-    setSelectedMonth("");
-    setSelectedYear("");
+  const clearAllFilters = () => {
     setSelectedEpisode("");
-    setSelectedSort("recent");
-    router.replace("?", { scroll: false });
-    onFilterChange({ sort: "recent" });
+
+    // Keep the categoryId since we're on a category page, only clear episode filter
+    onFilterChange({
+      categoryId: currentCategoryId || selectedCategory || undefined,
+      episode: undefined,
+    });
+
+    // Remove episode from URL but keep categoryId
+    const params = new URLSearchParams(window.location.search);
+    params.delete("episode");
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
   };
 
-  // Generate month options (1-12)
-  const getMonthOptions = () => {
-    const months = [
-      { value: "01", label: "January" },
-      { value: "02", label: "February" },
-      { value: "03", label: "March" },
-      { value: "04", label: "April" },
-      { value: "05", label: "May" },
-      { value: "06", label: "June" },
-      { value: "07", label: "July" },
-      { value: "08", label: "August" },
-      { value: "09", label: "September" },
-      { value: "10", label: "October" },
-      { value: "11", label: "November" },
-      { value: "12", label: "December" },
-    ];
-    return months;
-  };
+  const hasActiveFilters = selectedEpisode;
 
-  // Generate year options (2022 to current year)
-  const getYearOptions = () => {
-    const currentYear = new Date().getFullYear();
-    const options = [];
-    
-    for (let year = currentYear; year >= 2022; year--) {
-      options.push({ value: year.toString(), label: year.toString() });
-    }
-    
-    return options;
-  };
-
-  const monthOptions = getMonthOptions();
-  const yearOptions = getYearOptions();
-  const hasActiveFilters = selectedCategory || selectedMonth || selectedYear || selectedEpisode || selectedSort !== "recent";
-
-  // Don't render if no category is selected
   if (!shouldShowFilterBar) {
     return null;
   }
 
-  // Get current category name for display
-  const currentCategory = categories.find(cat => cat.id === selectedCategory);
-  const categoryDisplayName = currentCategoryName || currentCategory?.name || "Category";
-
   return (
-    <>
-      {/* Desktop Filter Bar */}
-      <div className={`bg-white border-b border-gray-200 ${className}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="hidden md:flex items-center justify-between py-4">
-            {/* Left side - Category name and Month filter */}
-            <div className="flex items-center gap-4">
-              {/* Back to Categories Button */}
-              <button
-                onClick={() => window.location.href = '/'}
-                className="flex items-center gap-2 px-4 py-2 text-base font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
+    <div className={`bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-20 ${className}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-4">
+
+          {/* Left side - Category name and Episode filter */}
+          <div className="flex items-center space-x-6">
+            {/* Category Name */}
+            <div className="flex items-center">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {currentCategoryName || "All Categories"}
+              </h2>
+            </div>
+
+            {/* Episode Filter */}
+            <div className="hidden sm:flex items-center space-x-2">
+              <label className="text-sm text-gray-600 font-medium">Episode:</label>
+              <select
+                value={selectedEpisode}
+                onChange={(e) => handleEpisodeChange(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[120px] text-gray-900 bg-white"
+                disabled={loadingEpisodes}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                All Categories
-              </button>
-
-              {/* Current Category Display */}
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-semibold text-gray-900">{categoryDisplayName}</span>
-                <span className="text-base text-gray-500">Testimonies</span>
-              </div>
-
-              {/* Month and Year Filters (only for recent sort) */}
-              {selectedSort === "recent" && (
-                <div className="flex gap-3">
-                  {/* Month Filter */}
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => handleMonthChange(e.target.value)}
-                      className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="">All Months</option>
-                      {monthOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <svg className="absolute right-2 top-3 h-4 w-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-
-                  {/* Year Filter */}
-                  <div className="relative">
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => handleYearChange(e.target.value)}
-                      className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="">All Years</option>
-                      {yearOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <svg className="absolute right-2 top-3 h-4 w-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-
-                  {/* Episode Filter */}
-                  <div className="relative">
-                    <select
-                      value={selectedEpisode}
-                      onChange={(e) => handleEpisodeChange(e.target.value)}
-                      className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="">All Episodes</option>
-                      {availableEpisodes.map((episode) => (
-                        <option key={episode} value={episode}>
-                          Episode {episode}
-                        </option>
-                      ))}
-                    </select>
-                    <svg className="absolute right-2 top-3 h-4 w-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
+                <option value="">
+                  {loadingEpisodes ? "Loading episodes..." : "All Episodes"}
+                </option>
+                {!loadingEpisodes && availableEpisodes.map((episode) => (
+                  <option key={episode} value={episode}>
+                    {episode.startsWith('Episode') || episode.startsWith('EP') ? episode : `Episode ${episode}`}
+                  </option>
+                ))}
+              </select>
+              {!loadingEpisodes && availableEpisodes.length === 0 && (
+                <span className="text-xs text-red-500">(No episodes found)</span>
               )}
-
-              {/* Clear Filters */}
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-base text-purple-600 hover:text-purple-800 font-medium"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </div>
-
-            {/* Right side - Sort options */}
-            <div className="flex items-center gap-3">
-              <span className="text-base text-gray-600 font-medium">Sort by:</span>
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => handleSortChange("recent")}
-                  className={`px-4 py-2 text-base font-semibold rounded-md transition-colors ${
-                    selectedSort === "recent"
-                      ? "bg-white text-purple-600 shadow-sm border border-purple-200"
-                      : "text-gray-700 hover:text-gray-900"
-                  }`}
-                >
-                  Recent
-                </button>
-                <button
-                  onClick={() => handleSortChange("mostSaved")}
-                  className={`px-4 py-2 text-base font-semibold rounded-md transition-colors ${
-                    selectedSort === "mostSaved"
-                      ? "bg-white text-purple-600 shadow-sm border border-purple-200"
-                      : "text-gray-700 hover:text-gray-900"
-                  }`}
-                >
-                  Most Saved
-                </button>
-              </div>
             </div>
           </div>
 
-          {/* Mobile Filter Toggle */}
-          <div className="md:hidden py-3">
-            {/* Back to Categories Button */}
+          {/* Right side - Clear filters */}
+          {hasActiveFilters && (
             <button
-              onClick={() => window.location.href = '/'}
-              className="flex items-center gap-2 mb-4 px-4 py-2 text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
+              onClick={clearAllFilters}
+              className="text-sm text-purple-600 hover:text-purple-800 font-medium"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              All Categories
+              Clear filters
             </button>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-semibold text-gray-900">{categoryDisplayName}</span>
-                <span className="text-base text-gray-500">Testimonies</span>
-              </div>
-
-              {/* Sort Toggle for Mobile */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => handleSortChange("recent")}
-                  className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
-                    selectedSort === "recent"
-                      ? "bg-white text-purple-600 shadow-sm border border-purple-200"
-                      : "text-gray-700 hover:text-gray-900"
-                  }`}
-                >
-                  Recent
-                </button>
-                <button
-                  onClick={() => handleSortChange("mostSaved")}
-                  className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
-                    selectedSort === "mostSaved"
-                      ? "bg-white text-purple-600 shadow-sm border border-purple-200"
-                      : "text-gray-700 hover:text-gray-900"
-                  }`}
-                >
-                  Popular
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Month and Year Filters */}
-          {selectedSort === "recent" && (
-            <div className="md:hidden border-t border-gray-200 py-4 space-y-3">
-              {/* Month Filter */}
-              <div className="relative">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => handleMonthChange(e.target.value)}
-                  className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-10 text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                >
-                  <option value="" className="text-gray-700">All Months</option>
-                  {monthOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="text-gray-900">
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-
-              {/* Year Filter */}
-              <div className="relative">
-                <select
-                  value={selectedYear}
-                  onChange={(e) => handleYearChange(e.target.value)}
-                  className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-10 text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                >
-                  <option value="" className="text-gray-700">All Years</option>
-                  {yearOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="text-gray-900">
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-
-              {/* Episode Filter */}
-              <div className="relative">
-                <select
-                  value={selectedEpisode}
-                  onChange={(e) => handleEpisodeChange(e.target.value)}
-                  className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-10 text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                >
-                  <option value="" className="text-gray-700">All Episodes</option>
-                  {availableEpisodes.map((episode) => (
-                    <option key={episode} value={episode} className="text-gray-900">
-                      Episode {episode}
-                    </option>
-                  ))}
-                </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-              
-              {/* Clear Filters */}
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="w-full px-4 py-3 text-base font-semibold text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200"
-                >
-                  Clear All Filters
-                </button>
-              )}
-            </div>
           )}
         </div>
+
+        {/* Mobile Episode Filter */}
+        <div className="sm:hidden pb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Episode Filter
+          </label>
+          <select
+            value={selectedEpisode}
+            onChange={(e) => handleEpisodeChange(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
+          >
+            <option value="">All Episodes</option>
+            {availableEpisodes.map((episode) => (
+              <option key={episode} value={episode}>
+                {episode.startsWith('Episode') || episode.startsWith('EP') ? episode : `Episode ${episode}`}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

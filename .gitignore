@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 functions/node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -72,3 +73,23 @@ public/clips/
 
 # Firebase debug logs
 firebase-debug.log
+
+# Build artifacts and large files to avoid
+dist/
+build/
+.next/
+out/
+
+# Runtime generated files to avoid
+*-player-script.js
+*.mp4
+*.webm
+*.avi
+*.mov
+*.mkv
+
+# Always check these before committing:
+# - No large binary files
+# - No API keys or secrets
+# - No temporary video/audio files
+# - No build artifacts

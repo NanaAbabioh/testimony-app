@@ -12,12 +12,8 @@ export default function CategoryPage() {
   
   const [filters, setFilters] = useState<{
     categoryId?: string;
-    month?: string;
-    year?: string;
     episode?: string;
-    sort: "recent" | "mostSaved";
   }>({
-    sort: "recent",
     categoryId: categoryId // Initialize with the categoryId from params
   });
   
@@ -56,20 +52,14 @@ export default function CategoryPage() {
   // Stable filter change handler to prevent infinite loops
   const handleFilterChange = useCallback((newFilters: {
     categoryId?: string;
-    month?: string;
-    year?: string;
     episode?: string;
-    sort: "recent" | "mostSaved";
   }) => {
     // Only update if filters actually changed
     const currentFilters = filtersRef.current;
     const hasChanged =
       currentFilters.categoryId !== newFilters.categoryId ||
-      currentFilters.month !== newFilters.month ||
-      currentFilters.year !== newFilters.year ||
-      currentFilters.episode !== newFilters.episode ||
-      currentFilters.sort !== newFilters.sort;
-    
+      currentFilters.episode !== newFilters.episode;
+
     if (hasChanged) {
       const updatedFilters = { ...newFilters };
       setFilters(updatedFilters);
@@ -175,17 +165,19 @@ export default function CategoryPage() {
       />
       
       {/* Main Content with clips */}
-      <main 
-        className="min-h-[60vh] relative"
-        style={{
-          backgroundImage: `url('/Ayaaaa-bg.svg')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundColor: '#f9fafb'
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="min-h-screen relative">
+        {/* Fixed Background Layer */}
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: `url('/Ayaaaa-bg.svg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed'
+          }}
+        ></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <ClipInfinite params={filters} />
         </div>
       </main>

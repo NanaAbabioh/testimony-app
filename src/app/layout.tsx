@@ -14,6 +14,24 @@ const merri = Merriweather({
 export const metadata: Metadata = {
   title: "Alpha Hour Testimony Library",
   description: "Discover inspiring testimonies of God's goodness from Alpha Hour services, automatically extracted and categorized using AI technology.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Alpha Hour Testimony Library",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({

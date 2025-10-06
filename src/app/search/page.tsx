@@ -150,42 +150,44 @@ function SearchPageContent() {
   const resultCount = clips.length;
 
   return (
-    <div className="min-h-screen" style={{
-      backgroundImage: `url('/Ayaaaa-bg.svg')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      backgroundColor: '#f9fafb'
-    }}>
+    <div className="min-h-screen relative">
+      {/* Fixed Background Layer */}
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: `url('/Ayaaaa-bg.svg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      ></div>
 
       {/* Search Header */}
-      <section className="bg-white py-8 border-b border-gray-200">
-        <div className="container mx-auto px-6">
+      <section className="relative z-10 bg-gray-50 py-6 sm:py-8 border-b border-gray-200">
+        <div className="container mx-auto px-4 sm:px-6">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-gray-600 mb-4">
-            <a href="/" className="hover:text-[#301934] transition-colors">Home</a>
-            <span>→</span>
-            <span className="text-gray-900 font-medium">
-              {q ? `Search Results for "${q}"` : 'Search'}
-            </span>
+          <div className="flex items-center gap-2 text-sm sm:text-base text-gray-700 mb-3 sm:mb-4">
+            <a href="/" className="hover:text-purple-600 transition-colors touch-manipulation font-medium">Home</a>
+            <span className="text-gray-400">→</span>
+            <span className="text-gray-900 font-semibold">Search</span>
           </div>
-          
+
           {/* Page Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-            {q ? 'Search Results' : 'Search Testimonies'}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+            {q ? `Search Results for "${q}"` : 'Search Testimonies'}
           </h1>
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
       {/* Sticky Toolbar */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 -mx-6 px-6">
-        <div className="py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-30 bg-gray-50 backdrop-blur-md border-b border-gray-200 -mx-4 sm:-mx-6 px-4 sm:px-6">
+        <div className="py-2 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <FilterSheet categories={cats} />
-          
+
           {/* Quick Search Input */}
           <input
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 bg-white text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#301934]/20 focus:border-[#301934]"
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 bg-white text-gray-900 text-sm sm:text-base transition-colors focus:outline-none focus:ring-2 focus:ring-[#301934]/20 focus:border-[#301934] placeholder-gray-500"
             placeholder="Search testimonies…"
             defaultValue={q}
             onKeyDown={(e) => {
@@ -197,10 +199,10 @@ function SearchPageContent() {
               }
             }}
           />
-          
+
           {/* Quick Sort */}
           <select
-            className="border border-gray-200 rounded-lg px-3 py-2 bg-white text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#301934]/20 focus:border-[#301934]"
+            className="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 bg-white text-gray-900 text-sm sm:text-base transition-colors focus:outline-none focus:ring-2 focus:ring-[#301934]/20 focus:border-[#301934]"
             defaultValue={sort}
             onChange={(e) => {
               const p = new URLSearchParams(window.location.search);
@@ -220,16 +222,16 @@ function SearchPageContent() {
       </div>
 
       {/* Results Section */}
-      <div className="py-[var(--pad-roomy)]">
+      <div className="py-4 sm:py-6 md:py-8">
         {/* Results Header */}
         {(hasFilters || loading) && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             {loading ? (
-              <div className="h-6 bg-black/5 dark:bg-white/10 rounded animate-pulse w-48"></div>
+              <div className="h-5 sm:h-6 bg-black/5 dark:bg-white/10 rounded animate-pulse w-32 sm:w-48"></div>
             ) : (
-              <div className="text-sm text-[hsl(var(--ink))]/70">
-                {resultCount === 0 ? "No results found" : 
-                 resultCount === 1 ? "1 result" : 
+              <div className="text-xs sm:text-sm text-[hsl(var(--ink))]/70">
+                {resultCount === 0 ? "No results found" :
+                 resultCount === 1 ? "1 result" :
                  `${resultCount} results`}
                 {hasFilters && " with current filters"}
               </div>
@@ -303,9 +305,9 @@ function SearchPageContent() {
       </div>
       
       {/* Footer */}
-      <footer className="bg-gray-100 border-t border-gray-200 py-8 mt-16">
-        <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-600">&copy; 2025 Alpha Hour Testimony Library</p>
+      <footer className="bg-gray-100 border-t border-gray-200 py-6 sm:py-8 mt-12 sm:mt-16">
+        <div className="container mx-auto px-4 sm:px-6 text-center">
+          <p className="text-sm sm:text-base text-gray-600">&copy; 2025 Alpha Hour Testimony Library</p>
         </div>
       </footer>
     </div>
