@@ -14,6 +14,25 @@ const merri = Merriweather({
 export const metadata: Metadata = {
   title: "Alpha Hour Testimony Library",
   description: "Discover inspiring testimonies of God's goodness from Alpha Hour services, automatically extracted and categorized using AI technology.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/ah-logo.svg",
+    other: [
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        url: "/favicon-32.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        url: "/favicon-16.png",
+      },
+    ],
+  },
   viewport: {
     width: "device-width",
     initialScale: 1,

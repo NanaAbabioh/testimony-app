@@ -126,14 +126,14 @@ export default function HamburgerMenu() {
   const handleWhatsAppContact = (phoneNumber: string) => {
     // Remove spaces and format for WhatsApp
     const cleanNumber = phoneNumber.replace(/\s+/g, '');
-    const whatsappUrl = `https://wa.me/${cleanNumber}?text=Hello! I would like to share my testimony with Alpha Hour.`;
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=Everyday with God, is Everyday in Victory`;
     window.open(whatsappUrl, '_blank');
     setIsOpen(false);
   };
 
   const handleEmailContact = (email: string) => {
     const subject = encodeURIComponent('My Testimony for Alpha Hour');
-    const body = encodeURIComponent('Hello,\n\nI would like to share my testimony with Alpha Hour.\n\n[Please write your testimony here]\n\nThank you!');
+    const body = encodeURIComponent('Everyday with God, is Everyday in Victory\n\n[Please write your testimony here]\n\nThank you!');
     const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
     window.location.href = mailtoUrl;
     setIsOpen(false);
