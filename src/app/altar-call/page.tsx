@@ -62,7 +62,7 @@ export default function AltarCallPage() {
       <main className="min-h-screen relative">
         {/* Fixed Background Layer */}
         <div
-          className="absolute inset-0 opacity-40"
+          className="absolute inset-0"
           style={{
             backgroundImage: `url('/Ayaaaa-bg.svg')`,
             backgroundSize: 'cover',
