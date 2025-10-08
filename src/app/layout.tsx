@@ -13,7 +13,7 @@ const merri = Merriweather({
 
 export const metadata: Metadata = {
   title: "Alpha Hour Testimony Library",
-  description: "Discover inspiring testimonies of God's goodness from Alpha Hour services, automatically extracted and categorized using AI technology.",
+  description: "Discover inspiring testimonies of God's goodness from Alpha Hour services.",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
