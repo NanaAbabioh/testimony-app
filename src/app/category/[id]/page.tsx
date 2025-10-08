@@ -26,9 +26,9 @@ export default function CategoryPage() {
   // Map category IDs to names for display (matching backend categories)
   const categoryMapping: { [key: string]: string } = {
     'academic-educational-advancement': 'Academic & Educational Advancement',
-    'career-financial-breakthrough': 'Career & Financial Breakthrough',
+    'career-financial-breakthrough': 'Career, Business & Financial Breakthrough',
     'deliverance-freedom': 'Deliverance & Freedom',
-    'divine-intervention-protection': 'Divine Intervention & Protection',
+    'divine-intervention-protection': 'Divine Intervention',
     'healing-divine-health': 'Healing & Divine Health',
     'immigration-travel': 'Immigration & Travel',
     'marriage-family-fruitfulness': 'Marriage, Family & Fruitfulness',
