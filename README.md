@@ -37,3 +37,31 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## AH Testimony Library
 Professional testimony library application with advanced filtering and cloud sync capabilities.
+
+## Git Repository Information
+
+**IMPORTANT**: This project uses the following repository structure:
+
+### Frontend (This Repository)
+- **Repository**: `NanaAbabioh/testimony-app`
+- **URL**: https://github.com/NanaAbabioh/testimony-app.git
+- **Contains**: Next.js frontend application
+- **Vercel Deployment**: Connected to this repository
+
+### Backend (Separate Repository)
+- **Repository**: Backend is in a separate location
+- **Contains**: Backend API services
+
+### Development Workflow
+1. All frontend changes should be committed and pushed to `NanaAbabioh/testimony-app`
+2. Environment variables are configured in Vercel for the `testimony-app` project
+3. Do NOT use the old `ah-testimony-library` repository
+
+### Commands
+```bash
+# Check current remote
+git remote -v
+
+# Push changes (should go to testimony-app)
+git push origin main
+```
