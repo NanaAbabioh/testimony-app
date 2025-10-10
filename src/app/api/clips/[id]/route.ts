@@ -194,3 +194,50 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     );
   }
 }
+
+// DELETE - Delete clip (admin only)
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    // Require admin authentication for deletion
+    const admin = await requireAdmin(req.headers.get("authorization") || undefined);
+    const { id } = params;
+
+    if (!db) {
+      console.error('[Clips API] Database not initialized');
+      return NextResponse.json({ error: "Database not available" }, { status: 500 });
+    }
+
+    // Check if clip exists
+    const clipRef = db.collection("clips").doc(id);
+    const clipDoc = await clipRef.get();
+
+    if (!clipDoc.exists) {
+      return NextResponse.json({ error: "Clip not found" }, { status: 404 });
+    }
+
+    // Delete the clip from Firestore
+    await clipRef.delete();
+
+    console.log('[Clips API] Clip deleted successfully:', id);
+    return NextResponse.json({
+      success: true,
+      message: "Clip deleted successfully",
+      id: id
+    });
+
+  } catch (error: any) {
+    console.error('[Clips API] Error deleting clip:', error);
+
+    if (error.message?.includes("Unauthorized") || error.status === 401) {
+      return NextResponse.json(
+        { error: "Unauthorized access" },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

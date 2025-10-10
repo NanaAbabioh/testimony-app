@@ -205,8 +205,14 @@ function VideoLibrary({ token }: { token: string | null }) {
   useEffect(() => {
     if (!token) return;
     loadVideos();
-    loadAvailableEpisodes();
   }, [token]);
+
+  // Load available episodes when videos change
+  useEffect(() => {
+    if (videos.length > 0) {
+      loadAvailableEpisodes();
+    }
+  }, [videos]);
 
   // Filter videos when filters change or videos are loaded
   useEffect(() => {
@@ -262,30 +268,21 @@ function VideoLibrary({ token }: { token: string | null }) {
     }
   };
 
-  const loadAvailableEpisodes = async () => {
-    try {
-      // Fetch clips to get available episodes, just like the frontend
-      const response = await fetch("/api/clips?limit=200&sort=recent");
-      if (response.ok) {
-        const data = await response.json();
-        if (data.items && Array.isArray(data.items)) {
-          const episodes = [...new Set(data.items
-            .map((item: any) => item.episode)
-            .filter((episode: string) => episode)
-            .map((episode: string) => episode.match(/\d+/)?.[0])
-            .filter((episode: string) => episode)
-          )].sort((a, b) => {
-            // Ensure proper numeric sorting (latest episode first)
-            const numA = parseInt(a, 10);
-            const numB = parseInt(b, 10);
-            return numB - numA; // Descending order
-          });
-          setAvailableEpisodes(episodes);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load available episodes:", error);
-    }
+  const loadAvailableEpisodes = () => {
+    // Extract episode numbers from video titles instead of clips
+    const episodes = [...new Set(videos
+      .map(video => {
+        const episodeInfo = parseEpisodeInfo(video.title, video.uploadDate);
+        return episodeInfo.episodeNumber;
+      })
+      .filter((episode: string) => episode && episode.trim() !== '')
+    )].sort((a, b) => {
+      // Ensure proper numeric sorting (latest episode first)
+      const numA = parseInt(a, 10);
+      const numB = parseInt(b, 10);
+      return numB - numA; // Descending order
+    });
+    setAvailableEpisodes(episodes);
   };
 
   const handleEditTestimonies = (videoId: string) => {

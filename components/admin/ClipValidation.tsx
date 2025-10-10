@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
-import { PencilSimple, X, FloppyDisk, CheckCircle, Check } from '@phosphor-icons/react';
+import { PencilSimple, X, FloppyDisk, CheckCircle, Check, Trash } from '@phosphor-icons/react';
 
 interface ValidationIssue {
   id: string;
@@ -69,6 +69,7 @@ export default function ClipValidation() {
   const [reextractingClips, setReextractingClips] = useState<Set<string>>(new Set());
   const [approvingClips, setApprovingClips] = useState<Set<string>>(new Set());
   const [okayingClips, setOkayingClips] = useState<Set<string>>(new Set());
+  const [deletingClips, setDeletingClips] = useState<Set<string>>(new Set());
 
   const runValidation = async () => {
     setLoading(true);
@@ -211,7 +212,7 @@ export default function ClipValidation() {
     }
 
     setReextractingClips(prev => new Set(prev).add(clipId));
-    
+
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/admin/clips/${clipId}/reextract`, {
@@ -235,6 +236,44 @@ export default function ClipValidation() {
       alert(`❌ Network error during re-extraction. Please check the console for details.`);
     } finally {
       setReextractingClips(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(clipId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteClip = async (clipId: string, clipTitle: string) => {
+    if (!confirm(`⚠️ PERMANENT DELETION WARNING ⚠️\n\nAre you sure you want to PERMANENTLY DELETE "${clipTitle}"?\n\nThis will:\n• Remove the clip from the video library completely\n• Delete all clip data from Firebase\n• This action CANNOT be undone\n\nClick OK to permanently delete this clip.`)) {
+      return;
+    }
+
+    setDeletingClips(prev => new Set(prev).add(clipId));
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/clips/${clipId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert(`✅ Clip "${clipTitle}" has been permanently deleted!\n\nThe clip has been completely removed from the library and Firebase.`);
+        // Refresh the validation results to update the UI
+        runValidation();
+      } else {
+        const errorMessage = data.message || data.error || 'Unknown error';
+        alert(`❌ Deletion failed: ${errorMessage}\n\nThe clip could not be deleted. Please try again.`);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert(`❌ Network error during deletion. Please check the console for details.`);
+    } finally {
+      setDeletingClips(prev => {
         const newSet = new Set(prev);
         newSet.delete(clipId);
         return newSet;
@@ -584,6 +623,25 @@ export default function ClipValidation() {
                       )}
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+                    onClick={() => handleDeleteClip(clip.id, clip.title)}
+                    disabled={deletingClips.has(clip.id)}
+                  >
+                    {deletingClips.has(clip.id) ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-red-600 border-t-transparent mr-1"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash size={16} className="mr-1" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             ))}
