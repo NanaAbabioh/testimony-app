@@ -3,6 +3,7 @@ import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import ConditionalNavigation from "@/components/ConditionalNavigation";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const merri = Merriweather({
@@ -13,7 +14,7 @@ const merri = Merriweather({
 
 export const metadata: Metadata = {
   title: "Alpha Hour Testimony Library",
-  description: "Discover inspiring testimonies of God's goodness from Alpha Hour services.",
+  description: "Discover faith-filled testimonies of God's Goodness & Mercies",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${merri.variable} font-sans bg-[hsl(var(--bg))] text-[hsl(var(--ink))] antialiased`}
       >
+        <GoogleAnalytics />
         <AuthProvider>
           <ConditionalNavigation>
             {children}

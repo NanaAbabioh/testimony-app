@@ -63,7 +63,11 @@ export default function ManualClipPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch('/api/admin/clips/manual', {
+      // Use Railway backend for video processing
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+      const apiUrl = backendUrl ? `${backendUrl}/api/admin/clips/manual` : '/api/admin/clips/manual';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -352,8 +356,12 @@ function BulkImportTab({ token, categories }: { token: string; categories: Categ
       // Create an abort controller with a 30-minute timeout for large imports
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 minutes
-      
-      const response = await fetch('/api/admin/clips/import', {
+
+      // Use Railway backend for video processing
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+      const apiUrl = backendUrl ? `${backendUrl}/api/admin/clips/import` : '/api/admin/clips/import';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
