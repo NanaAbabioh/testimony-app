@@ -7,11 +7,12 @@ import StatCard from "../../../components/admin/StatCard";
 import CategoryList from "../../../components/admin/CategoryList";
 import VideoTable from "../../../components/admin/VideoTable";
 import ClipValidation from "../../../components/admin/ClipValidation";
+import MultiSelectDropdown from "../../../components/admin/MultiSelectDropdown";
 import { SkeletonCard } from "../../../components/ui/Skeleton";
-import { 
-  VideoCamera, 
-  Target, 
-  Folder, 
+import {
+  VideoCamera,
+  Target,
+  Folder,
   ChartBar,
   ArrowClockwise,
   Plus,
@@ -40,12 +41,14 @@ type DashboardStats = {
 // Utility function to parse episode information from video titles
 function parseEpisodeInfo(title: string, uploadDate?: string) {
   // Try to extract episode number from common patterns like:
+  // "Episode 1087 | 29 Aug 2025" (your current format)
   // "Alpha Hour Episode 1087 | My Light Shines"
-  // "Episode 1087: My Light Shines" 
+  // "Episode 1087: My Light Shines"
   // "Ep 1087 - My Light Shines"
   // "1087: My Light Shines"
-  
+
   const episodePatterns = [
+    /Episode\s*(\d+)\s*\|\s*(.+)/i,  // Matches "Episode XXXX | Date/Title" (your format)
     /Alpha Hour\s*Episode\s*(\d+)\s*[|:]\s*(.+)/i,
     /Episode\s*(\d+)\s*[|:]\s*(.+)/i,
     /Episode\s*(\d+)\s*[-:]\s*(.+)/i,
@@ -61,7 +64,7 @@ function parseEpisodeInfo(title: string, uploadDate?: string) {
     const match = title.match(pattern);
     if (match) {
       episodeNumber = match[1];
-      episodeTitle = match[2].trim();
+      episodeTitle = match[2] ? match[2].trim() : title;
       break;
     }
   }
@@ -199,7 +202,7 @@ function VideoLibrary({ token }: { token: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [selectedEpisode, setSelectedEpisode] = useState<string>('all');
+  const [selectedEpisodes, setSelectedEpisodes] = useState<string[]>([]);
   const [availableEpisodes, setAvailableEpisodes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -247,15 +250,15 @@ function VideoLibrary({ token }: { token: string | null }) {
       });
     }
 
-    if (selectedEpisode !== 'all') {
+    if (selectedEpisodes.length > 0) {
       filtered = filtered.filter(video => {
         const episodeInfo = parseEpisodeInfo(video.title, video.uploadDate);
-        return episodeInfo.episodeNumber === selectedEpisode;
+        return selectedEpisodes.includes(episodeInfo.episodeNumber);
       });
     }
 
     setFilteredVideos(filtered);
-  }, [videos, selectedYear, selectedMonth, selectedEpisode]);
+  }, [videos, selectedYear, selectedMonth, selectedEpisodes]);
 
   const loadVideos = async () => {
     if (!token) return;
@@ -476,29 +479,21 @@ function VideoLibrary({ token }: { token: string | null }) {
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label htmlFor="episode-filter" className="text-sm text-gray-600 dark:text-gray-400">Episode:</label>
-              <select
-                id="episode-filter"
-                value={selectedEpisode}
-                onChange={(e) => setSelectedEpisode(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#5050F0] focus:border-[#5050F0]"
-              >
-                <option value="all">All Episodes</option>
-                {availableEpisodes.map(episode => (
-                  <option key={episode} value={episode}>
-                    Episode {episode}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <MultiSelectDropdown
+              label="Episode"
+              options={availableEpisodes}
+              selectedValues={selectedEpisodes}
+              onChange={setSelectedEpisodes}
+              placeholder="All Episodes"
+              renderOption={(episode) => `Episode ${episode}`}
+            />
             
-            {(selectedYear !== 'all' || selectedMonth !== 'all' || selectedEpisode !== 'all') && (
+            {(selectedYear !== 'all' || selectedMonth !== 'all' || selectedEpisodes.length > 0) && (
               <button
                 onClick={() => {
                   setSelectedYear('all');
                   setSelectedMonth('all');
-                  setSelectedEpisode('all');
+                  setSelectedEpisodes([]);
                 }}
                 className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 underline"
               >
