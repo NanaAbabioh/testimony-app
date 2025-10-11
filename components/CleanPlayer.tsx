@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import { Clock } from "@phosphor-icons/react";
 
 declare global {
