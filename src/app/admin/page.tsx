@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminToken from "../components/admin/AdminToken";
-import AdminHeader from "../../components/admin/AdminHeader";
-import StatCard from "../../components/admin/StatCard";
-import CategoryList from "../../components/admin/CategoryList";
-import VideoTable from "../../components/admin/VideoTable";
-import ClipValidation from "../../components/admin/ClipValidation";
-import MultiSelectDropdown from "../../components/admin/MultiSelectDropdown";
-import { SkeletonCard } from "../../components/ui/Skeleton";
+import AdminToken from "@/app/components/admin/AdminToken";
+import AdminHeader from "@/components/admin/AdminHeader";
+import StatCard from "@/components/admin/StatCard";
+import CategoryList from "@/components/admin/CategoryList";
+import VideoTable from "@/components/admin/VideoTable";
+import ClipValidation from "@/components/admin/ClipValidation";
+import MultiSelectDropdown from "@/components/admin/MultiSelectDropdown";
+import { SkeletonCard } from "@/components/ui/Skeleton";
 import {
   VideoCamera,
   Target,

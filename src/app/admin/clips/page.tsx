@@ -2,8 +2,8 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import AdminToken from '../../components/admin/AdminToken';
-import AdminHeader from '../../../components/admin/AdminHeader';
+import AdminToken from '@/app/components/admin/AdminToken';
+import AdminHeader from '@/components/admin/AdminHeader';
 import { ArrowLeft, FloppyDisk, CheckCircle, Warning, Clock } from '@phosphor-icons/react';
 import Link from 'next/link';
 

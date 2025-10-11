@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AdminToken from '../../../components/admin/AdminToken';
-import AdminHeader from '../../../components/admin/AdminHeader';
+import AdminToken from '@/app/components/admin/AdminToken';
+import AdminHeader from '@/components/admin/AdminHeader';
 import Link from 'next/link';
-import CSVImporter from '../../../components/admin/CSVImporter';
+import CSVImporter from '@/app/components/admin/CSVImporter';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Category {

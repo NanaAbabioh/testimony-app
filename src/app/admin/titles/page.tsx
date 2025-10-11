@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import AdminToken from '../../components/admin/AdminToken';
-import AdminHeader from '../../../components/admin/AdminHeader';
+import AdminToken from '@/app/components/admin/AdminToken';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 interface TitleData {
   videoId: string;

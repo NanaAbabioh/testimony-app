@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import CleanPlayer from "@/components/CleanPlayer";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 
 export default function AltarCallPage() {
   // Add custom CSS for animations
