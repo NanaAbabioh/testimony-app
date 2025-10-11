@@ -210,7 +210,20 @@ function VideoLibrary({ token }: { token: string | null }) {
   // Load available episodes when videos change
   useEffect(() => {
     if (videos.length > 0) {
-      loadAvailableEpisodes();
+      // Extract episode numbers from video titles
+      const episodes = [...new Set(videos
+        .map(video => {
+          const episodeInfo = parseEpisodeInfo(video.title, video.uploadDate);
+          return episodeInfo.episodeNumber;
+        })
+        .filter((episode: string) => episode && episode.trim() !== '')
+      )].sort((a, b) => {
+        // Ensure proper numeric sorting (latest episode first)
+        const numA = parseInt(a, 10);
+        const numB = parseInt(b, 10);
+        return numB - numA; // Descending order
+      });
+      setAvailableEpisodes(episodes);
     }
   }, [videos]);
 
@@ -266,23 +279,6 @@ function VideoLibrary({ token }: { token: string | null }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadAvailableEpisodes = () => {
-    // Extract episode numbers from video titles instead of clips
-    const episodes = [...new Set(videos
-      .map(video => {
-        const episodeInfo = parseEpisodeInfo(video.title, video.uploadDate);
-        return episodeInfo.episodeNumber;
-      })
-      .filter((episode: string) => episode && episode.trim() !== '')
-    )].sort((a, b) => {
-      // Ensure proper numeric sorting (latest episode first)
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      return numB - numA; // Descending order
-    });
-    setAvailableEpisodes(episodes);
   };
 
   const handleEditTestimonies = (videoId: string) => {
