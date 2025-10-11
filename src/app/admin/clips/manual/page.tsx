@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminToken from '../../../components/admin/AdminToken';
-import AdminHeader from '../../../../../components/admin/AdminHeader';
+import AdminHeader from '../../../components/admin/AdminHeader';
 import Link from 'next/link';
 import CSVImporter from '../../../components/admin/CSVImporter';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';

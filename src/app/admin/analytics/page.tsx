@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AdminToken from "../../components/admin/AdminToken";
-import AdminHeader from "../../../../components/admin/AdminHeader";
+import AdminHeader from "../../components/admin/AdminHeader";
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
