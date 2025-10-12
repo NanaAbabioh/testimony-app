@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb as db } from '@/lib/firebase-admin';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { processVideoAndUpload } from '@/lib/video-processor';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -228,25 +227,7 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        // Process video extraction for each clip
-        let processedClipUrl = '';
-        let videoProcessingError = null;
-
-        try {
-          console.log(`🎬 Extracting video clip: ${clip.clipTitle || 'Untitled'} (${startTimeSeconds}s-${endTimeSeconds}s)`);
-          processedClipUrl = await processVideoAndUpload(
-            clip.youtubeLink,
-            startTimeSeconds,
-            endTimeSeconds
-          );
-          console.log(`✅ Video extracted successfully: ${processedClipUrl}`);
-        } catch (extractError) {
-          console.warn(`⚠️ Video extraction failed for clip: ${extractError instanceof Error ? extractError.message : 'Unknown error'}`);
-          videoProcessingError = extractError instanceof Error ? extractError.message : 'Unknown extraction error';
-          // Continue without video extraction - clip will still be saved but will show full YouTube video
-        }
-
-        // Create clip document
+        // Create clip document first (without processed video)
         const clipRef = db!.collection('clips').doc();
         const clipData = {
           sourceVideoId: videoId,
@@ -257,11 +238,29 @@ export async function POST(request: NextRequest) {
           fullText: clip.briefDescription,
           language: clip.language,
           episode: clip.episode,
-          processedClipUrl: processedClipUrl, // Include the extracted video URL
-          videoProcessingError: videoProcessingError,
+          processedClipUrl: '', // Will be filled by local processor
+          processingStatus: 'pending', // Track processing status
           createdAt: new Date().toISOString(),
           createdBy: 'csv-import'
         };
+
+        // Create a processing job for the local processor
+        const jobRef = db!.collection('jobs').doc();
+        const jobData = {
+          clipId: clipRef.id,
+          youtubeUrl: clip.youtubeLink,
+          startTimeSeconds,
+          endTimeSeconds,
+          videoId,
+          clipTitle: clip.clipTitle || 'Untitled Testimony',
+          status: 'pending', // pending, processing, completed, failed
+          createdAt: new Date().toISOString(),
+          createdBy: 'admin',
+          priority: 1, // Higher number = higher priority
+        };
+
+        batch.set(jobRef, jobData);
+        console.log(`📋 Created processing job for clip: ${clip.clipTitle || 'Untitled'} (Job ID: ${jobRef.id})`);
         
         batch.set(clipRef, clipData);
         savedClips.push({
@@ -280,21 +279,18 @@ export async function POST(request: NextRequest) {
     // Commit the batch
     await batch.commit();
 
-    // Count video extraction results
-    const clipsWithVideos = savedClips.filter(c => c.processedClipUrl && c.processedClipUrl.trim() !== '').length;
-    const clipsWithoutVideos = savedClips.length - clipsWithVideos;
-
     return NextResponse.json({
       success: true,
       imported: savedClips.length,
       errors: errors.length,
+      message: `Created ${savedClips.length} clips. Video processing jobs queued for local processor.`,
       details: {
         savedClips: savedClips.length,
         errors: errors.slice(0, 5), // Show first 5 errors for debugging
         aiProcessed: clipsNeedingAI.length,
         total: clips.length,
-        videosExtracted: clipsWithVideos,
-        videoExtractionFailed: clipsWithoutVideos,
+        jobsCreated: savedClips.length,
+        note: 'Videos will be processed by local Mac processor. Check job status in admin panel.',
         errorSample: errors.length > 0 ? errors[0] : null
       }
     });

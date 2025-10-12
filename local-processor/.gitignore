@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment variables (NEVER commit these!)
+.env
+
+# Logs
+*.log
+processor.log
+processor-error.log
+
+# OS files
+.DS_Store
+
+# Firebase service account keys
+*serviceAccountKey.json
+*firebase-admin*.json

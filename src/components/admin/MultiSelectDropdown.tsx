@@ -23,6 +23,12 @@ export default function MultiSelectDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log(`[MultiSelectDropdown - ${label}] Options:`, options);
+    console.log(`[MultiSelectDropdown - ${label}] Selected:`, selectedValues);
+  }, [options, selectedValues, label]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,12 +70,16 @@ export default function MultiSelectDropdown({
   };
 
   return (
-    <div className="relative inline-block" ref={dropdownRef}>
-      <div className="flex items-center gap-2">
+    <div className="relative inline-block min-w-fit" ref={dropdownRef}>
+      <div className="flex items-center gap-2 relative">
         <label className="text-sm text-gray-600 dark:text-gray-400">{label}:</label>
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            console.log(`[MultiSelectDropdown - ${label}] Button clicked. Current isOpen:`, isOpen, 'Will set to:', !isOpen);
+            console.log(`[MultiSelectDropdown - ${label}] Options count:`, options.length);
+            setIsOpen(!isOpen);
+          }}
           className="min-w-[180px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#5050F0] focus:border-[#5050F0] flex items-center justify-between gap-2"
         >
           <span className="truncate">{getDisplayText()}</span>
@@ -81,7 +91,7 @@ export default function MultiSelectDropdown({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-[240px] bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-[300px] overflow-y-auto">
+        <div className="absolute z-[9999] mt-1 w-[280px] bg-white dark:bg-gray-700 border-2 border-gray-400 dark:border-gray-500 rounded-md shadow-2xl max-h-[400px] overflow-y-auto">
           {/* Select All Option */}
           <div
             className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer flex items-center gap-2 border-b border-gray-200 dark:border-gray-600 sticky top-0 bg-white dark:bg-gray-700 font-medium"

@@ -226,6 +226,8 @@ function VideoLibrary({ token }: { token: string | null }) {
         const numB = parseInt(b, 10);
         return numB - numA; // Descending order
       });
+      console.log('Available episodes extracted:', episodes);
+      console.log('Total videos:', videos.length);
       setAvailableEpisodes(episodes);
     }
   }, [videos]);
