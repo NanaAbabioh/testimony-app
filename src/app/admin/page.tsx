@@ -213,22 +213,40 @@ function VideoLibrary({ token }: { token: string | null }) {
   // Load available episodes when videos change
   useEffect(() => {
     if (videos.length > 0) {
+      console.log('🔍 Extracting episodes from videos...');
+      console.log('Total videos:', videos.length);
+      console.log('Sample video titles:', videos.slice(0, 3).map(v => v.title));
+
       // Extract episode numbers from video titles
-      const episodes = [...new Set(videos
+      const episodesWithInfo = videos
         .map(video => {
           const episodeInfo = parseEpisodeInfo(video.title, video.uploadDate);
+          console.log(`Video: "${video.title}" → Episode: "${episodeInfo.episodeNumber}"`);
           return episodeInfo.episodeNumber;
         })
-        .filter((episode: string) => episode && episode.trim() !== '')
-      )].sort((a, b) => {
+        .filter((episode: string) => {
+          const isValid = episode && episode.trim() !== '';
+          if (!isValid) {
+            console.log('⚠️ Filtered out empty/invalid episode');
+          }
+          return isValid;
+        });
+
+      const uniqueEpisodes = [...new Set(episodesWithInfo)];
+      console.log('Unique episodes found:', uniqueEpisodes);
+
+      const sortedEpisodes = uniqueEpisodes.sort((a, b) => {
         // Ensure proper numeric sorting (latest episode first)
         const numA = parseInt(a, 10);
         const numB = parseInt(b, 10);
         return numB - numA; // Descending order
       });
-      console.log('Available episodes extracted:', episodes);
-      console.log('Total videos:', videos.length);
-      setAvailableEpisodes(episodes);
+
+      console.log('✅ Available episodes (sorted):', sortedEpisodes);
+      setAvailableEpisodes(sortedEpisodes);
+    } else {
+      console.log('⚠️ No videos loaded yet');
+      setAvailableEpisodes([]);
     }
   }, [videos]);
 
