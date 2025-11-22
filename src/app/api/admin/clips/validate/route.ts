@@ -103,12 +103,27 @@ export async function GET(request: NextRequest) {
     }
     
     // Combine time validation issues with video extraction issues
+    // Use a Map to deduplicate - video extraction issues take priority over time validation
+    const clipMap = new Map();
+
+    // Add time validation issues first
+    timeValidation.flaggedClips.forEach(clip => {
+      clipMap.set(clip.id, clip);
+    });
+
+    // Add video extraction issues (will overwrite time validation for same clip)
+    videoExtractionIssues.forEach(clip => {
+      clipMap.set(clip.id, clip);
+    });
+
+    const deduplicatedFlaggedClips = Array.from(clipMap.values());
+
     const validation = {
       ...timeValidation,
-      flaggedClips: [...timeValidation.flaggedClips, ...videoExtractionIssues],
+      flaggedClips: deduplicatedFlaggedClips,
       summary: {
         ...timeValidation.summary,
-        flagged: timeValidation.summary.flagged + videoExtractionIssues.length,
+        flagged: deduplicatedFlaggedClips.length,
         videoExtractionFailures: videoExtractionIssues.length
       }
     };

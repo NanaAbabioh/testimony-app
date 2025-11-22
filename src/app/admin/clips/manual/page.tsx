@@ -63,9 +63,8 @@ export default function ManualClipPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // Use Railway backend for video processing
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
-      const apiUrl = backendUrl ? `${backendUrl}/api/admin/clips/manual` : '/api/admin/clips/manual';
+      // Use local Next.js API for video processing
+      const apiUrl = '/api/admin/clips/manual';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -357,9 +356,8 @@ function BulkImportTab({ token, categories }: { token: string; categories: Categ
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 minutes
 
-      // Use Railway backend for video processing
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
-      const apiUrl = backendUrl ? `${backendUrl}/api/admin/clips/import` : '/api/admin/clips/import';
+      // Use local Next.js API for video processing
+      const apiUrl = '/api/admin/clips/import';
 
       const response = await fetch(apiUrl, {
         method: 'POST',

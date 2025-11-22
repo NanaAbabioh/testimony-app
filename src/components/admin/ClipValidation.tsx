@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Button from '@/components/ui/button';
+import Button from '@/components/ui/Button';
 import { PencilSimple, X, FloppyDisk, CheckCircle, Check, Trash } from '@phosphor-icons/react';
 
 interface ValidationIssue {
@@ -92,9 +92,14 @@ export default function ClipValidation() {
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
-        setFlaggedClips(data.validation.flaggedClips || []);
+        // Deduplicate flagged clips by ID (defensive programming)
+        const clipsMap = new Map();
+        (data.validation.flaggedClips || []).forEach((clip: ValidationIssue) => {
+          clipsMap.set(clip.id, clip);
+        });
+        setFlaggedClips(Array.from(clipsMap.values()));
         setSummary(data.validation.summary);
       } else {
         throw new Error(data.error || 'Validation failed');
