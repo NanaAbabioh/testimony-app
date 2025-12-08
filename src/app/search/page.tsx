@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import FilterSheet from "@/components/FilterSheet";
 import ClipRow from "@/components/ClipRow";
 import Skeleton from "@/components/ui/Skeleton";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 
 type Clip = {
   id: string;

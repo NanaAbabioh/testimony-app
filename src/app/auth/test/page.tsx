@@ -3,7 +3,7 @@
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { UpgradeAccountForm } from '@/components/auth/UpgradeAccountForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Button from '@/components/ui/button';
+import Button from '@/components/ui/Button';
 import { User, Shield, Clock, AlertTriangle } from 'lucide-react';
 
 /**

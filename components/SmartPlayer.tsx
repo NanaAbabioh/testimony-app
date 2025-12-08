@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, useRef } from "react";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import { Play, Pause, SpeakerHigh, SpeakerX } from "@phosphor-icons/react";
 
 type Props = {

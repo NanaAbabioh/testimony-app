@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 
 type Category = { id: string; name: string };

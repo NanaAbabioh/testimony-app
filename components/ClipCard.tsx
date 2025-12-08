@@ -1,6 +1,6 @@
 "use client";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import { HeartIcon, ShareIcon, PlayIcon } from "@/components/ui/icons";
 import { useState } from "react";
 import { ensureGuest } from "@/lib/authClient";

@@ -6,7 +6,7 @@ import { useAuthContext } from '../providers/AuthProvider';
 // Note: You'll need to install and configure shadcn/ui components
 // Run: npx shadcn-ui@latest add card button input label
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Button from '@/components/ui/button';
+import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, User, LogOut, Loader2 } from 'lucide-react';

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import { HeartIcon, ShareIcon, PlayIcon } from "@/components/ui/icons";
 import { useState, useEffect } from "react";
 import { isDataSaverEffective } from "@/lib/dataSaver";
