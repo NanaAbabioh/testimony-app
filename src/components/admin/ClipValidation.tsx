@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Button from '@/components/ui/button';
+import Button from '@/components/ui/Button';
 import { PencilSimple, X, FloppyDisk, CheckCircle, Check, Trash } from '@phosphor-icons/react';
 
 interface ValidationIssue {

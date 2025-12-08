@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import CleanPlayer from "@/components/CleanPlayer";
 import ClipRow from "@/components/ClipRow";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import VideoInteractionButtons from "@/components/VideoInteractionButtons";
 
 async function getClip(id: string) {
