@@ -373,7 +373,7 @@ async function uploadToFirebaseStorage(
     }
 
     const storage = getStorage();
-    const bucket = storage.bucket('ah-testimony-library.appspot.com');
+    const bucket = storage.bucket('ah-testimony-library.firebasestorage.app');
 
     // Check file size
     const stats = fs.statSync(filePath);
