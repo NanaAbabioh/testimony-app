@@ -88,29 +88,65 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
       return;
     }
 
-    if (playerRef.current) {
-      // YouTube player for full video mode
-      const newPlayer = new window.YT.Player(playerRef.current, {
-        videoId: videoId,
-        playerVars: {
-          start: start,
-          autoplay: 0, // Let user control playback
-          controls: 1,
-          modestbranding: 1,
-          rel: 0,
-          playsinline: 1,
-          fs: 1, // Allow fullscreen in full video mode
-          iv_load_policy: 3,
-          cc_load_policy: 0,
-        },
-        events: {
-          onReady: (event: { target: any }) => {
-            event.target.seekTo(start);
-          }
-        }
-      });
+    // Small delay to ensure DOM is ready after switching from video element
+    const initPlayer = () => {
+      if (!playerRef.current) {
+        console.log('[CleanPlayer] Player ref not ready, waiting...');
+        return;
+      }
 
-      setPlayer(newPlayer);
+      console.log('[CleanPlayer] Initializing YouTube player for video:', videoId);
+      // YouTube player for full video mode
+      try {
+        const newPlayer = new window.YT.Player(playerRef.current, {
+          videoId: videoId,
+          playerVars: {
+            start: start,
+            autoplay: 1, // Auto-play when falling back from failed extracted clip
+            controls: 1,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            fs: 1, // Allow fullscreen in full video mode
+            iv_load_policy: 3,
+            cc_load_policy: 0,
+          },
+          events: {
+            onReady: (event: { target: any }) => {
+              console.log('[CleanPlayer] YouTube player ready');
+              event.target.seekTo(start);
+              if (showFullVideo) {
+                // If we're in fallback mode, start playing
+                event.target.playVideo();
+              }
+            },
+            onError: (event: { data: number }) => {
+              console.error('[CleanPlayer] YouTube player error:', {
+                errorCode: event.data,
+                videoId,
+                startTime: start
+              });
+              // Error codes: 2 = invalid param, 5 = HTML5 player error, 100 = video not found, 101/150 = embed not allowed
+              alert(`YouTube player error (code ${event.data}). This video may have playback restrictions.`);
+            },
+            onStateChange: (event: { data: number }) => {
+              console.log('[CleanPlayer] YouTube player state changed:', event.data);
+              // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: video cued
+            }
+          }
+        });
+
+        setPlayer(newPlayer);
+      } catch (error) {
+        console.error('[CleanPlayer] Error creating YouTube player:', error);
+      }
+    };
+
+    // Use setTimeout to ensure DOM is ready when switching from video element
+    if (showFullVideo && !player) {
+      setTimeout(initPlayer, 100);
+    } else if (playerRef.current) {
+      initPlayer();
     }
 
     return () => {
@@ -119,7 +155,7 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
         intervalRef.current = null;
       }
     };
-  }, [isAPIReady, videoId, start, useExtractedClip]);
+  }, [isAPIReady, videoId, start, useExtractedClip, showFullVideo, player]);
 
   // Handle mode toggle
   const handleToggleMode = () => {
