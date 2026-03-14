@@ -331,7 +331,14 @@ async function trimVideo(
       .outputOptions([
         '-preset', 'fast',
         '-crf', '22',
-        '-movflags', '+faststart'
+        '-movflags', '+faststart',
+        '-profile:v', 'high',
+        '-level', '4.0',
+        '-pix_fmt', 'yuv420p',
+        '-ar', '48000',  // Audio sample rate: 48kHz (browser compatible)
+        '-ac', '2',       // Audio channels: stereo
+        '-b:a', '128k',   // Audio bitrate: 128kbps
+        '-strict', 'experimental'
       ])
       .on('start', (commandLine: string) => {
         console.log('🎬 FFmpeg command started');
