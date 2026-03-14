@@ -10,7 +10,8 @@
     "migrate-clips": "tsx scripts/migrate-clips-to-cloud.ts",
     "migrate-clips:cleanup": "tsx scripts/migrate-clips-to-cloud.ts --cleanup",
     "fix-storage-urls": "tsx scripts/fix-storage-urls.ts",
-    "revert-storage-urls": "tsx scripts/revert-storage-urls.ts"
+    "revert-storage-urls": "tsx scripts/revert-storage-urls.ts",
+    "make-clips-public": "tsx scripts/make-clips-public.ts"
   },
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",

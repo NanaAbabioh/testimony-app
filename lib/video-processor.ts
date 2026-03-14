@@ -405,9 +405,12 @@ async function uploadToFirebaseStorage(
           processedAt: new Date().toISOString(),
         }
       },
-      public: true, // Make the file publicly accessible
       validation: 'crc32c',
     });
+
+    // Make the file publicly accessible
+    await file.makePublic();
+    console.log(`✅ File made public`);
 
     // Get public URL
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
