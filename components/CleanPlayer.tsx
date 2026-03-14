@@ -44,34 +44,27 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
   const start = Math.max(0, Math.floor(startSec || 0));
   const end = endSec ? Math.floor(endSec) : null;
   
-  // Load YouTube API only when needed (for full video mode)
+  // Load YouTube API (always load it as fallback, even for extracted clips)
   useEffect(() => {
-    if (!useExtractedClip) {
-      if (window.YT && window.YT.Player) {
-        setIsAPIReady(true);
-        return;
-      }
-
-      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-        const script = document.createElement('script');
-        script.src = 'https://www.youtube.com/iframe_api';
-        script.async = true;
-        document.body.appendChild(script);
-      }
-
-      window.onYouTubeIframeAPIReady = () => {
-        setIsAPIReady(true);
-      };
-    } else {
-      // For extracted clips, we don't need YouTube API
+    if (window.YT && window.YT.Player) {
       setIsAPIReady(true);
+      return;
     }
-  }, [useExtractedClip]);
+
+    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://www.youtube.com/iframe_api';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    window.onYouTubeIframeAPIReady = () => {
+      setIsAPIReady(true);
+    };
+  }, []);
 
   // Initialize player when API is ready
   useEffect(() => {
-    if (!isAPIReady) return;
-
     // Clean up previous player/interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -87,7 +80,15 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
       // For extracted clips, we don't need to initialize YouTube player
       // The HTML5 video element will be handled separately
       return;
-    } else if (playerRef.current) {
+    }
+
+    // For YouTube player, wait for API to be ready
+    if (!isAPIReady || !window.YT || !window.YT.Player) {
+      console.log('[CleanPlayer] YouTube API not ready yet, waiting...');
+      return;
+    }
+
+    if (playerRef.current) {
       // YouTube player for full video mode
       const newPlayer = new window.YT.Player(playerRef.current, {
         videoId: videoId,
@@ -182,8 +183,21 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
             }}
             controlsList="nodownload"
             onError={(e) => {
-              console.error('Error loading extracted clip:', e);
+              console.error('[CleanPlayer] Error loading extracted clip:', {
+                processedClipUrl,
+                error: e,
+                videoElement: videoRef.current
+              });
+              // Check if video element has more details
+              if (videoRef.current) {
+                console.error('[CleanPlayer] Video error details:', {
+                  networkState: videoRef.current.networkState,
+                  readyState: videoRef.current.readyState,
+                  error: videoRef.current.error
+                });
+              }
               // Fallback to YouTube if extracted clip fails
+              console.log('[CleanPlayer] Falling back to YouTube player...');
               setShowFullVideo(true);
             }}
           >

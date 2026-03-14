@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "migrate-clips": "tsx scripts/migrate-clips-to-cloud.ts",
-    "migrate-clips:cleanup": "tsx scripts/migrate-clips-to-cloud.ts --cleanup"
+    "migrate-clips:cleanup": "tsx scripts/migrate-clips-to-cloud.ts --cleanup",
+    "fix-storage-urls": "tsx scripts/fix-storage-urls.ts"
   },
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",

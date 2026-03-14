@@ -9,6 +9,7 @@ type RowClip = {
   id: string;
   videoId: string;
   startSec: number;
+  endSec?: number;
   titleShort: string;
   summaryShort?: string;
   thumbUrl?: string;

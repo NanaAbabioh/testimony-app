@@ -38,7 +38,7 @@ class ClipMigrator {
     this.initializeFirebase();
     this.db = getFirestore();
     this.storage = getStorage();
-    this.bucket = this.storage.bucket('ah-testimony-library.firebasestorage.app');
+    this.bucket = this.storage.bucket('ah-testimony-library.appspot.com');
   }
 
   private initializeFirebase() {
