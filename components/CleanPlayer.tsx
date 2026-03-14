@@ -208,9 +208,8 @@ export default function CleanPlayer({ videoId, startSec, endSec, processedClipUr
             ref={videoRef}
             src={processedClipUrl}
             controls
-            autoPlay
-            loop
             playsInline
+            preload="metadata"
             className="w-full h-full object-contain"
             style={{
               // Enhanced mobile video experience

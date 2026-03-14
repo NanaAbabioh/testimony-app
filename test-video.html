@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>Direct Video Playback Test</h1>
+
+    <h2>Test Video 1</h2>
+    <video
+        src="https://storage.googleapis.com/ah-testimony-library.firebasestorage.app/clips/--69x-SyQNw/1759450443_8106-8387.mp4"
+        controls
+        autoplay
+        style="width: 100%; max-width: 800px;"
+        onError="console.error('Video 1 failed to load', event.target.error)"
+        onLoadedMetadata="console.log('Video 1 metadata loaded')"
+    >
+        Your browser does not support the video tag.
+    </video>
+
+    <h2>Test Video 2</h2>
+    <video
+        src="https://storage.googleapis.com/ah-testimony-library.firebasestorage.app/clips/-A8ceNy5vkM/1769369825_4421-4517.mp4"
+        controls
+        style="width: 100%; max-width: 800px;"
+        onError="console.error('Video 2 failed to load', event.target.error)"
+        onLoadedMetadata="console.log('Video 2 metadata loaded')"
+    >
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        console.log('Test page loaded');
+
+        // Add detailed error logging
+        document.querySelectorAll('video').forEach((video, index) => {
+            video.addEventListener('error', (e) => {
+                console.error(`Video ${index + 1} error event:`, {
+                    error: e.target.error,
+                    errorCode: e.target.error?.code,
+                    errorMessage: e.target.error?.message,
+                    networkState: e.target.networkState,
+                    readyState: e.target.readyState,
+                    currentSrc: e.target.currentSrc
+                });
+            });
+
+            video.addEventListener('loadedmetadata', (e) => {
+                console.log(`Video ${index + 1} loaded:`, {
+                    duration: e.target.duration,
+                    videoWidth: e.target.videoWidth,
+                    videoHeight: e.target.videoHeight
+                });
+            });
+        });
+    </script>
+</body>
+</html>
