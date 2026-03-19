@@ -86,10 +86,10 @@ export async function GET(request: Request) {
       nextCursor,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Search error:', error);
     return NextResponse.json(
-      { error: 'Failed to search testimonies' },
+      { error: 'Failed to search testimonies', detail: error?.message || String(error) },
       { status: 500 }
     );
   }
