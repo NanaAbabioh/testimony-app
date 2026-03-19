@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchClient, ALGOLIA_INDEX } from '../../../../lib/algolia';
+import { getSearchClient, ALGOLIA_INDEX } from '../../../../lib/algolia';
 
 export async function GET(request: Request) {
   try {
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       sort === 'most-saved' ? `${ALGOLIA_INDEX}_most_saved` :
       ALGOLIA_INDEX;
 
-    const result = await searchClient.searchSingleIndex({
+    const result = await getSearchClient().searchSingleIndex({
       indexName,
       searchParams: {
         query: query.trim(),

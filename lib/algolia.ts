@@ -2,20 +2,34 @@ import { algoliasearch } from 'algoliasearch';
 
 export const ALGOLIA_INDEX = 'clips';
 
-// Search client (read-only, safe for server-side queries)
-export const searchClient = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
-  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!
-);
+// Lazy initialization — clients created on first use, not at module load time.
+// This prevents Next.js build failures when env vars aren't available during
+// the static analysis / page data collection phase.
+let _searchClient: ReturnType<typeof algoliasearch> | null = null;
+let _adminClient: ReturnType<typeof algoliasearch> | null = null;
 
-// Admin client (write access, for indexing clips)
-export const adminClient = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
-  process.env.ALGOLIA_ADMIN_KEY!
-);
+export function getSearchClient() {
+  if (!_searchClient) {
+    _searchClient = algoliasearch(
+      process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
+      process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!
+    );
+  }
+  return _searchClient;
+}
+
+function getAdminClient() {
+  if (!_adminClient) {
+    _adminClient = algoliasearch(
+      process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
+      process.env.ALGOLIA_ADMIN_KEY!
+    );
+  }
+  return _adminClient;
+}
 
 export interface AlgoliaClipRecord {
-  objectID: string;       // Firestore clip doc ID
+  objectID: string;
   title: string;
   titleShort: string;
   summaryShort: string;
@@ -49,7 +63,7 @@ export function toAlgoliaRecord(id: string, data: any): AlgoliaClipRecord {
 /** Index or update a single clip in Algolia */
 export async function indexClip(id: string, data: any) {
   try {
-    await adminClient.saveObject({
+    await getAdminClient().saveObject({
       indexName: ALGOLIA_INDEX,
       body: toAlgoliaRecord(id, data),
     });
@@ -61,7 +75,7 @@ export async function indexClip(id: string, data: any) {
 /** Remove a clip from the Algolia index */
 export async function deleteClipFromIndex(id: string) {
   try {
-    await adminClient.deleteObject({ indexName: ALGOLIA_INDEX, objectID: id });
+    await getAdminClient().deleteObject({ indexName: ALGOLIA_INDEX, objectID: id });
   } catch (err) {
     console.error(`[Algolia] Failed to delete clip ${id}:`, err);
   }
