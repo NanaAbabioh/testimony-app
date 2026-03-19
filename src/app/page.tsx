@@ -222,7 +222,7 @@ export default function HomePage() {
           </div>
           
           <div className="border-t border-gray-700 mt-12 pt-8 text-center">
-            <p className="text-gray-400">&copy; 2025 Alpha Hour Testimony Library.</p>
+            <p className="text-gray-400">&copy; {new Date().getFullYear()} Alpha Hour Testimony Library.</p>
           </div>
         </div>
       </footer>

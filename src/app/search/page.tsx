@@ -307,7 +307,7 @@ function SearchPageContent() {
       {/* Footer */}
       <footer className="bg-gray-100 border-t border-gray-200 py-6 sm:py-8 mt-12 sm:mt-16">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <p className="text-sm sm:text-base text-gray-600">&copy; 2025 Alpha Hour Testimony Library</p>
+          <p className="text-sm sm:text-base text-gray-600">&copy; {new Date().getFullYear()} Alpha Hour Testimony Library</p>
         </div>
       </footer>
     </div>

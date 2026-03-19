@@ -27,20 +27,27 @@ async function getClip(id: string) {
   }
 }
 
-async function getRelated(categoryId: string, currentClipId: string) {
+async function getRelated(clip: any) {
   try {
-    // Use clips API to get related clips from same category
-    const res = await fetch(`/api/clips?categoryId=${categoryId}&limit=6`);
+    // Extract meaningful keywords from the clip title (strip numbers, common words)
+    const stopwords = new Set(['and', 'of', 'the', 'a', 'an', 'in', 'for', 'with', 'after', 'from', 'by', 'to', 'years', 'year']);
+    const keywords = (clip.titleShort || clip.title || '')
+      .split(/[\s|,\-&]+/)
+      .map((w: string) => w.toLowerCase().replace(/[^a-z]/g, ''))
+      .filter((w: string) => w.length > 3 && !stopwords.has(w))
+      .slice(0, 4)
+      .join(' ');
+
+    if (!keywords) return [];
+
+    // Use Algolia search for relevance-ranked results
+    const res = await fetch(`/api/search?q=${encodeURIComponent(keywords)}&limit=6`);
     if (!res.ok) return [];
-    
-    const { items } = await res.json();
-    
-    // Filter out current clip and limit to 5
-    const relatedClips = items
-      .filter((clip: any) => clip.id !== currentClipId)
+
+    const { testimonies } = await res.json();
+    return (testimonies || [])
+      .filter((r: any) => r.id !== clip.id)
       .slice(0, 5);
-    
-    return relatedClips;
   } catch (error) {
     console.error('[Watch Page] Error fetching related clips:', error);
     return [];
@@ -72,11 +79,9 @@ export default function WatchPage() {
         
         setClip(clipData);
         
-        // Load related clips if we have a category
-        if (clipData.categoryId) {
-          const relatedClips = await getRelated(clipData.categoryId, clipId);
-          setRelated(relatedClips);
-        }
+        // Load related clips using Algolia keyword search
+        const relatedClips = await getRelated(clipData);
+        setRelated(relatedClips);
         
       } catch (err) {
         console.error('Error loading clip data:', err);
@@ -181,7 +186,7 @@ export default function WatchPage() {
             ← Back
           </Button>
           <Button
-            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
+            onClick={() => document.getElementById('related-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             size="sm"
             className="bg-purple-600 text-white hover:bg-purple-700 touch-manipulation"
           >
@@ -191,7 +196,7 @@ export default function WatchPage() {
 
         {/* Related - Mobile optimized */}
         {related.length > 0 && (
-          <section className="space-y-3">
+          <section id="related-section" className="space-y-3">
             <h2 className="font-serif text-lg sm:text-xl text-gray-900 font-bold px-1">More like this</h2>
             <div className="space-y-2 sm:space-y-3">
               {related.map((r) => <ClipRow key={r.id} clip={r} />)}

@@ -185,7 +185,7 @@ export default function CategoryPage() {
       {/* Minimal Footer */}
       <footer className="bg-gray-100 border-t border-gray-200 py-8">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-600">&copy; 2025 Alpha Hour Testimony Library</p>
+          <p className="text-gray-600">&copy; {new Date().getFullYear()} Alpha Hour Testimony Library</p>
         </div>
       </footer>
     </div>
