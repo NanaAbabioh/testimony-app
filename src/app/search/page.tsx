@@ -84,6 +84,7 @@ function SearchPageContent() {
             thumbUrl: item.thumbUrl || item.thumbnail,
             episode: item.episode || item.sourceVideo?.episode || "", // Include episode for sorting
             fullText: item.fullText || "", // Include full text for consistency
+            searchQuery: q || undefined, // Pass search context to watch page
             // Pass all original fields for full compatibility
             ...item
           }));
@@ -135,6 +136,7 @@ function SearchPageContent() {
             thumbUrl: item.thumbUrl || item.thumbnail,
             episode: item.episode || item.sourceVideo?.episode || "", // Include episode for sorting
             fullText: item.fullText || "", // Include full text for consistency
+            searchQuery: q || undefined, // Pass search context to watch page
             // Pass all original fields for full compatibility
             ...item
           }));

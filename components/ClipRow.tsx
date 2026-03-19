@@ -18,6 +18,7 @@ type RowClip = {
   episode?: string;
   title?: string; // AI-generated title
   fullText?: string; // Brief description from CSV
+  searchQuery?: string; // Search context to pass to watch page for related clips
 };
 
 export default function ClipRow({ clip }: { clip: RowClip }) {
@@ -32,7 +33,8 @@ export default function ClipRow({ clip }: { clip: RowClip }) {
     });
   }, [clip]);
 
-  const playUrl = `/watch/${clip.id}?start=${Math.floor(clip.startSec)}`;
+  const qParam = clip.searchQuery ? `&q=${encodeURIComponent(clip.searchQuery)}` : '';
+  const playUrl = `/watch/${clip.id}?start=${Math.floor(clip.startSec)}${qParam}`;
   const audioUrl = `/watch/${clip.id}?start=${Math.floor(clip.startSec)}&audioOnly=true`;
   const shareUrl = (typeof window !== "undefined") ? `${window.location.origin}${playUrl}` : playUrl;
   

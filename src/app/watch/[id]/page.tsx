@@ -27,27 +27,28 @@ async function getClip(id: string) {
   }
 }
 
-async function getRelated(clip: any) {
+async function getRelated(clip: any, searchQuery?: string) {
   try {
-    // Extract meaningful keywords from the clip title (strip numbers, common words)
-    const stopwords = new Set(['and', 'of', 'the', 'a', 'an', 'in', 'for', 'with', 'after', 'from', 'by', 'to', 'years', 'year']);
-    const keywords = (clip.titleShort || clip.title || '')
-      .split(/[\s|,\-&]+/)
-      .map((w: string) => w.toLowerCase().replace(/[^a-z]/g, ''))
-      .filter((w: string) => w.length > 3 && !stopwords.has(w))
-      .slice(0, 4)
-      .join(' ');
+    // Option 4: use search context (from search page) or first pipe-segment of title
+    const titleSegment = (clip.titleShort || clip.title || '').split('|')[0].trim();
+    const keyword = searchQuery || titleSegment;
 
-    if (!keywords) return [];
+    if (keyword) {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(keyword)}&limit=7`);
+      if (res.ok) {
+        const { testimonies } = await res.json();
+        const filtered = (testimonies || []).filter((r: any) => r.id !== clip.id).slice(0, 5);
+        if (filtered.length >= 2) return filtered;
+      }
+    }
 
-    // Use Algolia search for relevance-ranked results
-    const res = await fetch(`/api/search?q=${encodeURIComponent(keywords)}&limit=6`);
+    // Fallback: category-only if keyword search yields fewer than 2 results
+    const category = clip.categoryId || clip.category || '';
+    if (!category) return [];
+    const res = await fetch(`/api/search?category=${encodeURIComponent(category)}&limit=6`);
     if (!res.ok) return [];
-
     const { testimonies } = await res.json();
-    return (testimonies || [])
-      .filter((r: any) => r.id !== clip.id)
-      .slice(0, 5);
+    return (testimonies || []).filter((r: any) => r.id !== clip.id).slice(0, 5);
   } catch (error) {
     console.error('[Watch Page] Error fetching related clips:', error);
     return [];
@@ -64,6 +65,7 @@ export default function WatchPage() {
 
   const clipId = params.id as string;
   const startParam = searchParams.get('start');
+  const searchQuery = searchParams.get('q') || undefined;
   
   useEffect(() => {
     async function loadData() {
@@ -79,8 +81,8 @@ export default function WatchPage() {
         
         setClip(clipData);
         
-        // Load related clips using Algolia keyword search
-        const relatedClips = await getRelated(clipData);
+        // Load related clips — use search context or title segment keyword
+        const relatedClips = await getRelated(clipData, searchQuery);
         setRelated(relatedClips);
         
       } catch (err) {
@@ -94,7 +96,7 @@ export default function WatchPage() {
     if (clipId) {
       loadData();
     }
-  }, [clipId]);
+  }, [clipId, searchQuery]);
   
   if (loading) {
     return (
