@@ -57,20 +57,10 @@ export default function HomePage() {
             <div className="flex justify-center">
               <button 
                 onClick={() => {
-                  // Find the categories section with "What testimony are you believing God for?"
-                  const categoriesSection = document.getElementById('categories-section');
-                  if (categoriesSection) {
-                    // Account for fixed header height (approx 80px)
-                    const headerOffset = 80;
-                    const elementPosition = categoriesSection.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                    
-                    // Use native smooth scroll for better performance
-                    window.scrollTo({
-                      top: offsetPosition,
-                      behavior: 'smooth'
-                    });
-                  }
+                  document.getElementById('categories-section')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
                 }}
                 className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg uppercase tracking-wide hover:shadow-2xl hover:scale-105 transition-all transform shadow-lg touch-manipulation"
               >
