@@ -5,6 +5,7 @@ import { adminDb as db } from "../../../../../../lib/firebase-admin";
 import { requireAdmin } from "../../../../../../lib/requireAdmin";
 import { parseTimeToSeconds } from "../../../../../../lib/parse";
 import { processVideoAndUpload } from "../../../../../../lib/video-processor";
+import { indexClip } from "../../../../../../lib/algolia";
 
 interface CreateClipRequest {
   videoUrl?: string;
@@ -197,6 +198,9 @@ export async function POST(req: NextRequest) {
     };
 
     await clipDoc.set(clipData);
+
+    // Index in Algolia (non-blocking)
+    indexClip(clipDoc.id, clipData);
 
     return NextResponse.json({
       success: true,

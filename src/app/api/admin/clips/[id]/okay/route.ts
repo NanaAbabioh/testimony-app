@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb as db } from '@/lib/firebase-admin';
 import { requireAdmin } from '@/lib/requireAdmin';
+import { indexClip } from '@/lib/algolia';
 
 interface OkayRequest {
   adminComments?: string;
@@ -64,6 +65,9 @@ export async function POST(
     };
 
     await clipRef.update(updateData);
+
+    // Index in Algolia (non-blocking)
+    indexClip(clipId, { ...clipData, ...updateData });
 
     console.log(`[Clip Okay] Successfully marked clip ${clipId} as okay (false positive)`);
 
