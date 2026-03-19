@@ -8,12 +8,12 @@ export const ALGOLIA_INDEX = 'clips';
 let _searchClient: ReturnType<typeof algoliasearch> | null = null;
 let _adminClient: ReturnType<typeof algoliasearch> | null = null;
 
+const ALGOLIA_APP_ID = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || '7NDPGA6KYD';
+const ALGOLIA_SEARCH_KEY = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || 'f566dc934ce7fa1e3336f934b260202d';
+
 export function getSearchClient() {
   if (!_searchClient) {
-    _searchClient = algoliasearch(
-      process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
-      process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!
-    );
+    _searchClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
   }
   return _searchClient;
 }
@@ -21,7 +21,7 @@ export function getSearchClient() {
 function getAdminClient() {
   if (!_adminClient) {
     _adminClient = algoliasearch(
-      process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
+      ALGOLIA_APP_ID,
       process.env.ALGOLIA_ADMIN_KEY!
     );
   }
